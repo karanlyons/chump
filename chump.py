@@ -229,8 +229,8 @@ class PushoverMessage(object):
 		self.url_title = None
 		self.priority = -1
 		self.callback = None
-		self.retry = 30
-		self.expire = 86400
+		self.retry = None
+		self.expire = None
 		self.sound = None
 		
 		for key, value in data.iteritems():
