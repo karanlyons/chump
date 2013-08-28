@@ -19,3 +19,13 @@ Chump is an Apache2 Licensed, fully featured API wrapper for `Pushover <https://
 	>>> message = u.send_message('Hi!')
 	>>> message.id
 	u'74f737c1f0c49b65ed511b97a70f4d37'
+
+
+Installation
+------------
+
+Install chump just like everything else:
+
+.. code-block:: bash
+
+	$ pip install chump

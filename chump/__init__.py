@@ -47,6 +47,14 @@ except:
 
 
 class PushoverError(Exception):
+	"""
+	Pushover errors eponysterically end up here. :attr:`.request_id` gives you
+	the request id assigned by Pushover, which can be helpful if you need to
+	talk to them about the error. :attr:`.messages` stores a list of human
+	readable error messages returned by the endpoint.
+	
+	"""
+	
 	def __init__(self, request_id, messages):
 		self.request_id = request_id
 		self.messages = messages
@@ -56,6 +64,14 @@ class PushoverError(Exception):
 
 
 class Pushover(object):
+	"""
+	The Pushover application in use.
+	
+	:param string token: Pushover API token. Can be changed later by setting
+		:attr:`Pushover.token`.
+	
+	"""
+	
 	endpoint = 'https://api.pushover.net/1/'
 	requests = {
 		'message': {
@@ -95,6 +111,17 @@ class Pushover(object):
 		return 'Pushover(token=\'{token}\')'.format(token=self.token)
 	
 	def authenticate(self, token=None):
+		"""
+		Authenticates the supplied application token on
+		:func:`chump.Pushover.__init__`. If authenticated,
+		:attr:`.is_authenticated` is ``True``, and :attr:`.sounds` is loaded
+		with a ``dict`` of available notification sounds.
+		
+		:returns: :attr:`.is_authenticated`.
+		:rtype: bool
+		
+		"""
+		
 		self.is_authenticated = True
 		
 		try:
@@ -110,9 +137,33 @@ class Pushover(object):
 		return self.is_authenticated
 	
 	def get_user(self, token):
+		"""
+		Returns a :class:`PushoverUser` attached to the :class:`Pushover`
+		instance.
+		
+		:param string token: User API token. Can be changed later by setting
+			:attr:`PushoverUser.token`.
+		:rtype: :class:`PushoverUser`
+		
+		"""
+		
 		return PushoverUser(self, token)
 	
 	def request(self, request, data={}, url=None):
+		"""
+		Handles the request/response cycle to Pushover's API endpoint. Request
+		types are defined in :attr:`Pushover.requests`.
+		
+		:param string request: 'message', 'validate', 'sound', or 'receipt'.
+		:param dict data: (optional) Payload to send to endpoint.
+		:param string url: (optional) URL to send payload to; overwrites.
+			URL specified by :param:request.
+		:returns: Response's ``json``.
+		:rtype: ``json``.
+		:raises: :class:`PushoverError` when request or response is invalid.
+		
+		"""
+		
 		data['token'] = self.token
 		
 		if url is None:
@@ -138,6 +189,15 @@ class Pushover(object):
 
 
 class PushoverUser(object):
+	"""
+	A Pushover user. The user is tied to a specific :class:`Pushover`
+	application, which can be changed later by setting :attr:`.app`.
+	
+	:param string token: User API token. Can be changed later by setting
+		:attr:`PushoverUser.token`.
+	
+	"""
+	
 	def __init__(self, app, token):
 		self.app = app
 		self.token = token
@@ -158,6 +218,17 @@ class PushoverUser(object):
 		return 'PushoverUser(app={app}, token=\'{token}\')'.format(app=repr(self.app), token=self.token)
 	
 	def authenticate(self):
+		"""
+		Authenticates the supplied user token on
+		:func:`chump.PushoverUser.__init__`. If authenticated,
+		:attr:`.is_authenticated` is ``True``, and :attr:`.devices` is loaded
+		with a ``set`` of the user's available devices.
+		
+		:returns: :attr:`.is_authenticated`.
+		:rtype: bool
+		
+		"""
+		
 		try:
 			response = self.app.request('validate', {'user': self.token})
 		
@@ -179,6 +250,27 @@ class PushoverUser(object):
 		return self.is_authenticated
 	
 	def send_message(self, message, title=None, timestamp=None, url=None, url_title=None, devices=None, priority=-1, callback=None, retry=30, expire=86400, sound=None):
+		"""
+		Sends a message to the User with :attr:``.app``.
+		
+		:param string message:
+		:param string title: (optional)
+		:param timestamp: (optional)
+		:type timestamp: datetime or integer
+		:param string url: (optional)
+		:param devices: (optional)
+		:type devices: string or iterable
+		:param integer priority: (optional)
+		:param string callback: (optional)
+		:param integer retry: (optional)
+		:param integer expire: (optional)
+		:param string sound: (optional)
+		
+		:returns: A message or a list of messages.
+		:rtype: :class:`PushoverMessage` or [:class:`PushoverMessage`,...]
+		
+		"""
+		
 		kwargs = locals()
 		
 		data = {
@@ -221,6 +313,19 @@ class PushoverUser(object):
 
 
 class PushoverMessage(object):
+	"""
+	A Pushover message. The message is tied to a specific :class:`Pushover`
+	application, and :class:`PushoverUser` user. The paramaters of the message
+	are exposed as attributes on the object, for convenience.
+	
+	:param user:
+	:type user: :class:`PushoverUser`
+	:param dict data:
+	:param device: (optional)
+	:type device: string or iterable
+	
+	"""
+	
 	def __init__(self, user, data, device=None):
 		self.app = user.app
 		self.user = user
