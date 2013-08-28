@@ -49,7 +49,7 @@ class PushoverError(Exception):
 		self.messages = messages
 	
 	def __str__(self):
-		return '({id}) {messages}'.format(id=self.request_id, messages=' '.join(self.messages))
+		return "({id}) {messages}".format(id=self.request_id, messages=" ".join(self.messages))
 
 
 class Pushover(object):
@@ -146,7 +146,7 @@ class PushoverUser(object):
 			self.authenticate()
 	
 	def __str__(self):
-		return 'User: {token}'.format(token=self.token)
+		return "User: {token}".format(token=self.token)
 	
 	def __unicode__(self):
 		return self.__str__()
