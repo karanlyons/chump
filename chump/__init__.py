@@ -110,7 +110,7 @@ class Pushover(object):
 	def __repr__(self):
 		return 'Pushover(token=\'{token}\')'.format(token=self.token)
 	
-	def authenticate(self, token=None):
+	def authenticate(self):
 		"""
 		Authenticates the supplied application token on
 		:func:`chump.Pushover.__init__`. If authenticated,
