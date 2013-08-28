@@ -199,8 +199,8 @@ class PushoverUser(object):
 				data['callback'] = callback
 		
 		for kwarg in ('title', 'devices', 'url', 'url_title', 'sound'):
-			if hasattr(kwargs, kwarg):
-				data[kwarg] = getattr(kwargs, kwarg)
+			if kwargs[kwarg]:
+				data[kwarg] = kwargs[kwarg]
 		
 		if devices:
 			if hasattr(devices, '__iter__'):
