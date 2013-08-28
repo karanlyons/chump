@@ -9,7 +9,7 @@ from datetime import datetime
 import requests
 
 
-VERSION = (0, 1, 0)
+VERSION = (0, 1, 1)
 
 __title__ = 'chump'
 __version__ = '.'.join((str(i) for i in VERSION))
