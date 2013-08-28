@@ -83,13 +83,13 @@ class Pushover(object):
 			self.authenticate()
 	
 	def __str__(self):
-		return 'Application: {token}'.format(token=self.token)
+		return "Application: {token}".format(token=self.token)
 		
 	def __unicode__(self):
 		return self.__str__()
 	
 	def __repr__(self):
-		return "Pushover(token='{token}')".format(token=self.token)
+		return 'Pushover(token=\'{token}\')'.format(token=self.token)
 	
 	def authenticate(self, token=None):
 		self.is_authenticated = True
@@ -152,7 +152,7 @@ class PushoverUser(object):
 		return self.__str__()
 	
 	def __repr__(self):
-		return "PushoverUser(app={app}, token='{token}')".format(app=repr(self.app), token=self.token)
+		return 'PushoverUser(app={app}, token=\'{token}\')'.format(app=repr(self.app), token=self.token)
 	
 	def authenticate(self):
 		try:
@@ -274,7 +274,7 @@ class PushoverMessage(object):
 	
 	def __str__(self):
 		if self.title:
-			return '({title}) {message}'.format(title=self.title, message=self.message)
+			return "({title}) {message}".format(title=self.title, message=self.message)
 		
 		else:
 			return self.message
