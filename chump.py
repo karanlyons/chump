@@ -281,6 +281,3 @@ class PushoverMessage(object):
 	
 	def __unicode__(self):
 		return self.__str__()
-	
-	def __repr__(self):
-		return "PushoverMessage(user={user}, data={data}, device={device})".format(user=repr(self.user), data=unicode(self.data), device=self.device)
