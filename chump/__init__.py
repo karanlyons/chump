@@ -99,7 +99,7 @@ class Pushover(object):
 		super(Pushover, self).__setattr__(name, value)
 		
 		if name == 'token':
-			self.authenticate()
+			self._authenticate()
 	
 	def __str__(self):
 		return "Application: {token}".format(token=self.token)
@@ -110,7 +110,7 @@ class Pushover(object):
 	def __repr__(self):
 		return 'Pushover(token=\'{token}\')'.format(token=self.token)
 	
-	def authenticate(self):
+	def _authenticate(self):
 		"""
 		Authenticates the supplied application token on
 		:func:`chump.Pushover.__init__`. If authenticated,
@@ -125,14 +125,14 @@ class Pushover(object):
 		self.is_authenticated = True
 		
 		try:
-			self.request('validate')
+			self._request('validate')
 		
 		except PushoverError as error:
 			if 'application token is invalid' in error.messages:
 				self.is_authenticated = False
 		
 		if self.is_authenticated and not hasattr(self, 'sounds'):
-			self.sounds = self.request('sound')['sounds']
+			self.sounds = self._request('sound')['sounds']
 		
 		return self.is_authenticated
 	
@@ -149,7 +149,7 @@ class Pushover(object):
 		
 		return PushoverUser(self, token)
 	
-	def request(self, request, data=None, url=None):
+	def _request(self, request, data=None, url=None):
 		"""
 		Handles the request/response cycle to Pushover's API endpoint. Request
 		types are defined in :attr:`Pushover.requests`.
@@ -209,7 +209,7 @@ class PushoverUser(object):
 		super(PushoverUser, self).__setattr__(name, value)
 		
 		if name == 'token':
-			self.authenticate()
+			self._authenticate()
 	
 	def __str__(self):
 		return "User: {token}".format(token=self.token)
@@ -220,7 +220,7 @@ class PushoverUser(object):
 	def __repr__(self):
 		return 'PushoverUser(app={app}, token=\'{token}\')'.format(app=repr(self.app), token=self.token)
 	
-	def authenticate(self):
+	def _authenticate(self):
 		"""
 		Authenticates the supplied user token on
 		:func:`chump.PushoverUser.__init__`. If authenticated,
@@ -233,7 +233,7 @@ class PushoverUser(object):
 		"""
 		
 		try:
-			response = self.app.request('validate', {'user': self.token})
+			response = self.app._request('validate', {'user': self.token})
 		
 		except PushoverError as error:
 			if 'user is valid but has no active devices' in error.messages:
@@ -354,7 +354,7 @@ class PushoverMessage(object):
 		if self.timestamp:
 			self.timestamp = epoch_to_datetime(self.timestamp)
 		
-		response = self.app.request('message', data)
+		response = self.app._request('message', data)
 		
 		self.id = response['request']
 		
@@ -374,7 +374,7 @@ class PushoverMessage(object):
 			else:
 				def poll():
 					if not (self.expired and self.acknowledged and self.called_back):
-						response = self.app.request('receipt', url='{endpoint}{url}{receipt}.json'.format(endpoint=self.app.endpoint, url=self.app.requests['receipt']['url'], receipt=self.receipt))
+						response = self.app._request('receipt', url='{endpoint}{url}{receipt}.json'.format(endpoint=self.app.endpoint, url=self.app.requests['receipt']['url'], receipt=self.receipt))
 						
 						for attr in ('expired', 'acknowledged', 'called_back'):
 							setattr(self, attr, bool(response[attr]))
