@@ -234,7 +234,8 @@ class PushoverMessage(object):
 		self.sound = None
 		
 		for key, value in data.iteritems():
-			setattr(self, key, value)
+			if key !=  'user':
+				setattr(self, key, value)
 		
 		if self.device:
 			data['device'] = device
