@@ -149,7 +149,7 @@ class Pushover(object):
 		
 		return PushoverUser(self, token)
 	
-	def request(self, request, data={}, url=None):
+	def request(self, request, data=None, url=None):
 		"""
 		Handles the request/response cycle to Pushover's API endpoint. Request
 		types are defined in :attr:`Pushover.requests`.
@@ -163,6 +163,9 @@ class Pushover(object):
 		:raises: :class:`PushoverError` when request or response is invalid.
 		
 		"""
+		
+		if data is None:
+			data = {}
 		
 		data['token'] = self.token
 		
