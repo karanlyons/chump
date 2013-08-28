@@ -55,9 +55,11 @@ class PushoverError(Exception):
 	
 	"""
 	
-	def __init__(self, request_id, messages):
-		self.request_id = request_id
-		self.messages = messages
+	def __init__(self, response):
+		self.response = response
+		self.request_id = self.response['request']
+		self.messages = self.response['messages']
+		self.bad_inputs = [key for key, value in self.response.iteritems() if value =='invalid']
 	
 	def __str__(self):
 		return "({id}) {messages}".format(id=self.request_id, messages=" ".join(self.messages))
@@ -182,13 +184,16 @@ class Pushover(object):
 			response = request.json()
 			
 			if 400 <= request.status_code < 500:
-				raise PushoverError(response['request'], response['errors'])
+				raise PushoverError(response)
 			
 			else:
 				return response
 		
 		else:
-			raise PushoverError(None, ['unknown error ({code})'.format(code=request.status_code)])
+			raise PushoverError({
+				'request': None,
+				'messages': ['unknown error ({code})'.format(code=request.status_code)],
+			})
 
 
 class PushoverUser(object):
