@@ -12,5 +12,7 @@ True
 True
 >>> user.devices
 set([u'iPhone'])
->>> m = u.send_message('Hi!')
+>>> message = u.send_message('Hi!')
+>>> message.id
+u'74f737c1f0c49b65ed511b97a70f4d37'
 ```
