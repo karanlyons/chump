@@ -8,10 +8,11 @@ from datetime import datetime
 
 import requests
 
+
 VERSION = (0, 1, 0)
 
 __title__ = 'chump'
-__version__ = '.'.join(VERSION)
+__version__ = '.'.join((str(i) for i in VERSION))
 __author__ = 'Karan Lyons'
 __contact__ = 'karan@karanlyons.com'
 __homepage__ = 'https://github.com/karanlyons/chump'
@@ -81,6 +82,15 @@ class Pushover(object):
 		if name == 'token':
 			self.authenticate()
 	
+	def __str__(self):
+		return 'Application: {token}'.format(token=self.token)
+		
+	def __unicode__(self):
+		return self.__str__()
+	
+	def __repr__(self):
+		return "Pushover(token='{token}')".format(token=self.token)
+	
 	def authenticate(self, token=None):
 		self.is_authenticated = True
 		
@@ -134,6 +144,15 @@ class PushoverUser(object):
 		
 		if name == 'token':
 			self.authenticate()
+	
+	def __str__(self):
+		return 'User: {token}'.format(token=self.token)
+	
+	def __unicode__(self):
+		return self.__str__()
+	
+	def __repr__(self):
+		return "PushoverUser(app={app}, token='{token}')".format(app=repr(self.app), token=self.token)
 	
 	def authenticate(self):
 		try:
@@ -252,3 +271,16 @@ class PushoverMessage(object):
 					return not (self.expired or self.acknowledged)
 				
 				setattr(self, 'poll', poll)
+	
+	def __str__(self):
+		if self.title:
+			return '({title}) {message}'.format(title=self.title, message=self.message)
+		
+		else:
+			return self.message
+	
+	def __unicode__(self):
+		return self.__str__()
+	
+	def __repr__(self):
+		return "PushoverMessage(user={user}, data={data}, device={device})".format(user=repr(self.user), data=unicode(self.data), device=self.device)
