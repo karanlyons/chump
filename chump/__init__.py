@@ -27,6 +27,8 @@ logger.addHandler(logging.NullHandler())
 try:
 	import pytz
 	
+	def utc_now(): return pytz.utc.localize(datetime.utcnow())
+	
 	def datetime_to_epoch(d):
 		try:
 			return int(time.mktime(d.astimezone(pytz.utc).timetuple()))
@@ -34,13 +36,14 @@ try:
 		except ValueError:
 			return int(time.mktime(d.timetuple()))
 	
-	def epoch_to_datetime(e): return pytz.utc.localize(datetime.fromtimestamp(e))
+	def epoch_to_datetime(e): return pytz.utc.localize(datetime.utcfromtimestamp(e))
 
 except:
 	logger.warning('pytz is not installed; datetime\'s may be innacurate.')
 	
+	def utc_now(): return datetime.utcnow()
 	def datetime_to_epoch(d): return int(time.mktime(d.timetuple()))
-	def epoch_to_datetime(e): return datetime.fromtimestamp(e)
+	def epoch_to_datetime(e): return datetime.utcfromtimestamp(e)
 
 
 class PushoverError(Exception):
@@ -189,7 +192,7 @@ class PushoverUser(object):
 				data['timestamp'] = datetime_to_epoch(timestamp)
 		
 		else:
-			data['timestamp'] = datetime_to_epoch(datetime.utcnow())
+			data['timestamp'] = datetime_to_epoch(utc_now())
 		
 		if priority == 2:
 			data['retry'] = retry
@@ -240,6 +243,9 @@ class PushoverMessage(object):
 		if self.device:
 			data['device'] = device
 		
+		if self.timestamp:
+			self.timestamp = epoch_to_datetime(self.timestamp)
+		
 		response = self.app.request('message', data)
 		
 		self.id = response['request']
@@ -267,7 +273,7 @@ class PushoverMessage(object):
 							
 							if response[attr]:
 								attr_at = '{}_at'.format(attr)
-								setattr(self, attr_at, datetime.utcfromtimestamp(response[attr_at]))
+								setattr(self, attr_at, epoch_to_datetime(response[attr_at]))
 					
 					return not (self.expired or self.acknowledged)
 				
