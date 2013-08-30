@@ -158,7 +158,4 @@ Constants
 	:members: LOW, NORMAL, HIGH, EMERGENCY
 
 
-History
-=======
-
 .. include:: ../HISTORY.rst
