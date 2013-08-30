@@ -11,7 +11,7 @@ Chump is an Apache2 Licensed, fully featured API wrapper for
 .. code-block:: pycon
 
 	>>> from chump import Pushover
-	>>> app = Pushover('vmXXhu6J04RCQPaAIFUR6JOq6jllP1')
+	>>> app = Application('vmXXhu6J04RCQPaAIFUR6JOq6jllP1')
 	>>> app.is_authenticated
 	True
 	>>> user = app.get_user('KAGAw2ZMxDJVhW2HAUiSZEamwGebNa')

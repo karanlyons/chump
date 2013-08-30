@@ -11,7 +11,7 @@ Chump is an Apache2 Licensed, fully featured API wrapper for
 .. code-block:: pycon
 
 	>>> from chump import Pushover
-	>>> app = Pushover('vmXXhu6J04RCQPaAIFUR6JOq6jllP1')
+	>>> app = Application('vmXXhu6J04RCQPaAIFUR6JOq6jllP1')
 	>>> app.is_authenticated
 	True
 	>>> user = app.get_user('KAGAw2ZMxDJVhW2HAUiSZEamwGebNa')
@@ -43,8 +43,8 @@ Creating and sending a message yourself:
 ----------------------------------------
 
 If you'd like to send messages yourself, just swap out
-:func:`~chump.PushoverUser.send_message`
-for :func:`~chump.PushoverUser.create_message`:
+:func:`~chump.User.send_message`
+for :func:`~chump.User.create_message`:
 
 .. code-block:: pycon
 
@@ -89,7 +89,7 @@ API restrictions:
 		u'tugboat', u'none', u'incoming', u'intermission', u'cosmic',
 		u'persistent', u'mechanical', u'climb'], was 'this is not a sound'
 
-All parameters are exposed as attributes in the :class:`~chump.PushoverMessage`,
+All parameters are exposed as attributes in the :class:`~chump.Message`,
 so you can change them later.
 
 
@@ -101,7 +101,7 @@ require dismissal from the user, and if not dismissed they'll keep popping up
 every ``retry`` seconds until ``timeout`` seconds from when they were sent. When
 the user acknowledges the message, ``callback`` will be pinged by Pushover's
 servers, but you can also check in on the message's status by calling
-:func:`~chump.EmergencyPushoverMessage.poll`:
+:func:`~chump.EmergencyMessage.poll`:
 
 .. code-block:: pycon
 
@@ -116,29 +116,29 @@ servers, but you can also check in on the message's status by calling
 	>>> str(message.acknowledged_at)
 	'1995-12-24 06:10:39+00:00'
 
-:func:`~chump.EmergencyPushoverMessage.poll` returns ``True`` whilst the message
+:func:`~chump.EmergencyMessage.poll` returns ``True`` whilst the message
 has not been acknowledged, so you can use it as an argument in while loops.
 
 
 Developer Interface
-==================
+===================
 
 Main Interface
 --------------
 
 .. automodule:: chump
-	:members: Pushover, PushoverUser
+	:members: Application, User
 	:undoc-members:
 
 
 Lower-Level Classes
 -------------------
 
-.. autoclass:: PushoverMessage
+.. autoclass:: Message
 	:members:
 	:undoc-members:
 
-.. autoclass:: EmergencyPushoverMessage
+.. autoclass:: EmergencyMessage
 	:show-inheritance:
 	:members:
 	:undoc-members:
@@ -147,7 +147,7 @@ Lower-Level Classes
 Exceptions
 ----------
 
-.. autoexception:: chump.PushoverError
+.. autoexception:: chump.APIError
 	:members:
 
 

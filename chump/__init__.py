@@ -10,7 +10,7 @@ from email.utils import parsedate
 import requests
 
 
-VERSION = (1, 1, 0)
+VERSION = (1, 2, 0)
 
 __title__ = 'Chump'
 __version__ = '.'.join((str(i) for i in VERSION)) # str for compatibility with setup.py under Python 3.
@@ -76,7 +76,7 @@ REQUESTS = {
 }
 
 
-class PushoverError(Exception):
+class APIError(Exception):
 	"""
 	Pushover errors eponysterically end up here.
 	
@@ -94,13 +94,13 @@ class PushoverError(Exception):
 		#: A :py:class:`dict` of the inputs the endpoint didn't like and why.
 		self.bad_inputs = dict([(key, value) for key, value in self.response.iteritems() if key not in {'errors', 'messages', 'status', 'receipt', 'request'}])
 		
-		logger.debug('PushoverError raised. Endpoint response was {response}'.format(response=self.response))
+		logger.debug('APIError raised. Endpoint response was {response}'.format(response=self.response))
 	
 	def __str__(self):
 		return "({id}) {messages}".format(id=self.request_id, messages=" ".join(self.messages))
 
 
-class Pushover(object):
+class Application(object):
 	"""
 	The Pushover app in use.
 	
@@ -114,7 +114,7 @@ class Pushover(object):
 		self.token = unicode(token) #: The app's API token.
 	
 	def __setattr__(self, name, value):
-		super(Pushover, self).__setattr__(name, value)
+		super(Application, self).__setattr__(name, value)
 		
 		if name == 'token':
 			self._authenticate()
@@ -126,7 +126,7 @@ class Pushover(object):
 		return self.__str__()
 	
 	def __repr__(self):
-		return 'Pushover(token=\'{token}\')'.format(token=self.token)
+		return 'Application(token=\'{token}\')'.format(token=self.token)
 	
 	def _authenticate(self):
 		"""
@@ -139,7 +139,7 @@ class Pushover(object):
 		try:
 			self._request('validate')
 		
-		except PushoverError as error:
+		except APIError as error:
 			if 'token' in error.bad_inputs:
 				self.is_authenticated = False
 		
@@ -148,15 +148,15 @@ class Pushover(object):
 	
 	def get_user(self, token):
 		"""
-		Returns a :class:`~chump.PushoverUser` attached to the
-		:class:`~chump.Pushover` instance.
+		Returns a :class:`~chump.User` attached to the
+		:class:`~chump.Application` instance.
 		
 		:param string token: User API token.
-		:rtype: :class:`~chump.PushoverUser`.
+		:rtype: :class:`~chump.User`.
 		
 		"""
 		
-		return PushoverUser(self, token)
+		return User(self, token)
 	
 	def _request(self, request, data=None, url=None):
 		"""
@@ -172,7 +172,7 @@ class Pushover(object):
 		:returns: Response's ``json``.
 		:rtype: ``json``.
 		
-		:raises: :exc:`~chump.PushoverError` when request or response is invalid.
+		:raises: :exc:`~chump.APIError` when request or response is invalid.
 		
 		"""
 		
@@ -195,26 +195,27 @@ class Pushover(object):
 			json['sent'] = http_date_to_datetime(response.headers['date'])
 			
 			if 400 <= response.status_code < 500:
-				raise PushoverError(json)
+				raise APIError(json)
 			
 			else:
 				return json
 		
 		else:
-			raise PushoverError({
+			raise APIError({
 				'request': None,
 				'status': 0,
 				'messages': ['unknown error ({code})'.format(code=response.status_code)],
 			})
 
 
-class PushoverUser(object):
+class User(object):
 	"""
-	A Pushover user. The user is tied to a specific :class:`~chump.Pushover` app, which
-	can be changed later by setting :attr:`.app`.
+	A Pushover user. The user is tied to a specific
+	:class:`~chump.Application` app, which can be changed later by
+	setting :attr:`.app`.
 	
 	:param app: The Pushover app to send messages with.
-	:type app: :class:`~chump.Pushover`
+	:type app: :class:`~chump.Application`
 	:param string token: The user's API token.
 	
 	"""
@@ -226,7 +227,7 @@ class PushoverUser(object):
 		self.token = unicode(token) #: The user's API token.
 	
 	def __setattr__(self, name, value):
-		super(PushoverUser, self).__setattr__(name, value)
+		super(User, self).__setattr__(name, value)
 		
 		if name == 'token':
 			self._authenticate()
@@ -238,7 +239,7 @@ class PushoverUser(object):
 		return self.__str__()
 	
 	def __repr__(self):
-		return 'PushoverUser(app={app}, token=\'{token}\')'.format(app=repr(self.app), token=self.token)
+		return 'User(app={app}, token=\'{token}\')'.format(app=repr(self.app), token=self.token)
 	
 	def _authenticate(self):
 		"""
@@ -249,7 +250,7 @@ class PushoverUser(object):
 		try:
 			response = self.app._request('validate', {'user': self.token})
 		
-		except PushoverError as error:
+		except APIError as error:
 			if 'token' in error.bad_inputs: # We can't authenticate users with a bad API token.
 				self.app.is_authenticated = False
 				self.is_authenticated = None
@@ -302,7 +303,7 @@ class PushoverUser(object):
 			default sound.
 		
 		:returns: An unsent message.
-		:rtype: :class:`~chump.PushoverMessage` or :class:`EmergencyPushoverMessage`.
+		:rtype: :class:`~chump.Message` or :class:`EmergencyMessage`.
 		
 		"""
 		
@@ -310,11 +311,11 @@ class PushoverUser(object):
 		kwargs.pop('self')
 		
 		if priority == 2:
-			message_class = EmergencyPushoverMessage
+			message_class = EmergencyMessage
 			kwargs.pop('priority')
 		
 		else:
-			message_class = PushoverMessage
+			message_class = Message
 			[kwargs.pop(key) for key in ('callback', 'retry', 'expire')]
 		
 		return message_class(self, **kwargs)
@@ -327,7 +328,7 @@ class PushoverUser(object):
 		:attr:`.app` as well.
 		
 		:returns: A sent message.
-		:rtype: :class:`~chump.PushoverMessage` or :class:`EmergencyPushoverMessage`.
+		:rtype: :class:`~chump.Message` or :class:`EmergencyMessage`.
 		
 		"""
 		
@@ -342,16 +343,16 @@ class PushoverUser(object):
 		return messages
 
 
-class PushoverMessage(object):
+class Message(object):
 	"""
-	A Pushover message. The message is tied to a specific :class:`~chump.Pushover` app,
-	and :class:`~chump.PushoverUser` user. All parameters are exposed as
-	attributes on the message, for convenience.
+	A Pushover message. The message is tied to a specific
+	:class:`~chump.Application` app, and :class:`~chump.User` user. All
+	parameters are exposed as attributes on the message, for convenience.
 	
 	:param user: The user to send the message to.
-	:type user: :class:`~chump.PushoverUser`
+	:type user: :class:`~chump.User`
 	
-	All other arguments are the same as in :func:`PushoverUser.create_message`.
+	All other arguments are the same as in :func:`User.create_message`.
 	
 	"""
 	
@@ -372,7 +373,7 @@ class PushoverMessage(object):
 		self.is_sent = False #: A :py:obj:`bool` indicating whether the message has been sent.
 		self.sent_at = None #: A :py:class:`datetime.datetime` of when the message was sent, otherwise ``None``.
 		
-		self.error = None #: A :exc:`~chump.PushoverError` if there was an error sending the message, otherwise ``None.
+		self.error = None #: A :exc:`~chump.APIError` if there was an error sending the message, otherwise ``None.
 	
 	def __setattr__(self, name, value):
 		if value and name in {'message', 'title', 'url', 'url_title', 'device', 'callback', 'sound', 'priority', 'retry', 'expire'}:
@@ -428,7 +429,7 @@ class PushoverMessage(object):
 			elif name == 'device' and value not in self.user.devices:
 				raise ValueError('Bad device: must be in {devices}, was {value}'.format(devices=self.user.devices, value=repr(value)))
 		
-		super(PushoverMessage, self).__setattr__(name, value)
+		super(Message, self).__setattr__(name, value)
 	
 	def send(self):
 		"""
@@ -453,10 +454,10 @@ class PushoverMessage(object):
 				data[kwarg] = getattr(self, kwarg)
 		
 		try:
-			# We've got to store this somewhere so that EmergencyPushoverMessage can check it for a receipt.
+			# We've got to store this somewhere so that EmergencyMessage can check it for a receipt.
 			self._response = self.user.app._request('message', data)
 		
-		except PushoverError as error:
+		except APIError as error:
 			self.is_sent = False
 			self.error = error
 			
@@ -486,14 +487,14 @@ class PushoverMessage(object):
 		return self.__str__()
 
 
-class EmergencyPushoverMessage(PushoverMessage):
+class EmergencyMessage(Message):
 	"""
 	An emergency Pushover message, (that is, a message with the priority of
 	:const:`~chump.EMERGENCY`).
 	
-	All arguments are the same as in :class:`~chump.PushoverMessage`, with the
-	additions of :arg:`.call_back`, :arg:`.retry`, and :arg:`.timeout`, which
-	are all, too, as defined in :func:`PushoverUser.create_message`.
+	All arguments are the same as in :class:`~chump.Message`, with the
+	additions of :arg:`call_back`, :arg:`retry`, and :arg:`timeout`, which
+	are all, too, as defined in :func:`User.create_message`.
 	
 	"""
 	
@@ -502,7 +503,7 @@ class EmergencyPushoverMessage(PushoverMessage):
 		         retry=30, expire=86400):
 		priority = EMERGENCY
 		
-		super(EmergencyPushoverMessage, self).__init__(
+		super(EmergencyMessage, self).__init__(
 			user, message, title, timestamp, url,
 			url_title, device, priority, sound
 		)
@@ -531,7 +532,7 @@ class EmergencyPushoverMessage(PushoverMessage):
 		elif name == 'expire' and value > 86400:
 			raise ValueError('Bad expire: must be <= 86400, was {value}'.format(value=value))
 		
-		super(EmergencyPushoverMessage, self).__setattr__(name, value)
+		super(EmergencyMessage, self).__setattr__(name, value)
 	
 	def send(self):
 		self.receipt = None
@@ -547,7 +548,7 @@ class EmergencyPushoverMessage(PushoverMessage):
 		self.is_called_back = None
 		self.called_back_at = None
 		
-		super(EmergencyPushoverMessage, self).send()
+		super(EmergencyMessage, self).send()
 		
 		if self.is_sent:
 			self.receipt = self._response['receipt']
