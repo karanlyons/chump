@@ -39,5 +39,8 @@ nosetests.xml
 .pydevproject
 
 # Setuptools
-chumo.egg-info/
+chump.egg-info/
 dist/
+
+# Sphinx
+docs/_build
