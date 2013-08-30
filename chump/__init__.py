@@ -558,9 +558,8 @@ class EmergencyPushoverMessage(PushoverMessage):
 	
 	def poll(self):
 		"""
-		Polls for the results of the sent message. If the 
-		
-		If the message has not been sent, does so.
+		Polls for the results of the sent message. If the message has not been
+		sent, does so.
 		
 		:returns: A boolean indicating if the message has not expired, called
 			back nor been acknowledged, or ``None`` if the message has no
