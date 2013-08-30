@@ -493,7 +493,7 @@ class EmergencyMessage(Message):
 	:const:`~chump.EMERGENCY`).
 	
 	All arguments are the same as in :class:`~chump.Message`, with the
-	additions of :arg:`call_back`, :arg:`retry`, and :arg:`timeout`, which
+	additions of ``call_back``, ``retry``, and ``timeout``, which
 	are all, too, as defined in :func:`User.create_message`.
 	
 	"""
