@@ -1,4 +1,8 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from __future__ import division, absolute_import, print_function, unicode_literals
+
+import sys
 
 import chump
 
@@ -10,19 +14,23 @@ except ImportError:
 	from distutils.core import setup
 
 install_requires = []
-for line in open('requirements.txt', 'rbU').readlines():
+for line in open('requirements.txt', 'rU').readlines():
 	if line and line not in '\n' and not line.startswith(('#', '-')):
 		install_requires.append(line.replace('\n', ''))
 
+kwargs = {}
+if sys.version_info >= (3,):
+	kwargs['use_2to3'] = True
+
 setup(
-	name='chump',
+	name="chump",
 	version=chump.__version__,
-	description='A fully featured API wrapper for Pushover.',
-	long_description='\n\n'.join([open('README.rst', 'rbU').read(), open('HISTORY.rst', 'rbU').read()]),
+	description="A fully featured API wrapper for Pushover.",
+	long_description="\n\n".join([open('README.rst', 'rU').read(), open('HISTORY.rst', 'rU').read()]),
 	author=chump.__author__,
 	author_email=chump.__contact__,
 	url=chump.__homepage__,
-	license=open('LICENSE', 'rbU').read(),
+	license=open('LICENSE', 'rU').read(),
 	packages=['chump'],
 	package_dir={'chump': 'chump'},
 	package_data={'': ['README.rst', 'HISTORY.rst', 'LICENSE']},
@@ -35,6 +43,12 @@ setup(
 		'Natural Language :: English',
 		'License :: OSI Approved :: Apache Software License',
 		'Programming Language :: Python',
+		'Programming Language :: Python :: 2.6',
 		'Programming Language :: Python :: 2.7',
+		'Programming Language :: Python :: 3',
+		'Programming Language :: Python :: 3.1',
+		'Programming Language :: Python :: 3.2',
+		'Programming Language :: Python :: 3.3',
 	),
+	**kwargs
 )

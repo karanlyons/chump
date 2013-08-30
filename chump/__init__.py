@@ -10,10 +10,10 @@ from email.utils import parsedate
 import requests
 
 
-VERSION = (1, 0, 0)
+VERSION = (1, 1, 0)
 
-__title__ = 'chump'
-__version__ = '.'.join((str(i) for i in VERSION))
+__title__ = 'Chump'
+__version__ = '.'.join((str(i) for i in VERSION)) # str for compatibility with setup.py under Python 3.
 __author__ = 'Karan Lyons'
 __contact__ = 'karan@karanlyons.com'
 __homepage__ = 'https://github.com/karanlyons/chump'
@@ -184,7 +184,7 @@ class Pushover(object):
 		if url is None:
 			url = ENDPOINT + REQUESTS[request]['url']
 		
-		logger.debug('Making request ({request}): {data}'.format(request=request, data=str(data)))
+		logger.debug('Making request ({request}): {data}'.format(request=request, data=unicode(data)))
 		
 		response = getattr(requests, REQUESTS[request]['method'])(url, params=data)
 		
@@ -423,10 +423,10 @@ class PushoverMessage(object):
 					raise TypeError('Bad priority: expected int, got {type}.'.format(type=type(value)))
 			
 			elif name == 'sound' and value not in self.user.app.sounds:
-				raise ValueError('Bad sound: must be in {sounds}, was u\'{value}\''.format(sounds=self.user.app.sounds.keys(), value=value))
+				raise ValueError('Bad sound: must be in {sounds}, was {value}'.format(sounds=self.user.app.sounds.keys(), value=repr(value)))
 			
 			elif name == 'device' and value not in self.user.devices:
-				raise ValueError('Bad device: must be in {devices}, was u\'{value}\''.format(devices=self.user.devices, value=value))
+				raise ValueError('Bad device: must be in {devices}, was {value}'.format(devices=self.user.devices, value=repr(value)))
 		
 		super(PushoverMessage, self).__setattr__(name, value)
 	

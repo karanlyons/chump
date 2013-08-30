@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import division, absolute_import, print_function, unicode_literals
+
 import os
 import sys
 
@@ -9,8 +11,8 @@ sys.path.append(os.path.abspath('_themes'))
 import chump
 
 
-project = u"Chump"
-copyright = u"2013, Karan Lyons"
+project = "Chump"
+copyright = "2013, Karan Lyons"
 version = release = chump.__version__
 language = 'English'
 
@@ -33,8 +35,8 @@ add_module_names = True
 pygments_style = 'sphinx'
 
 htmlhelp_basename = 'chump_docs'
-html_title = u"Chump {version} Documentation".format(version=version)
-html_short_title = u"Chump"
+html_title = "Chump {version} Documentation".format(version=version)
+html_short_title = "Chump"
 html_last_updated_fmt = ''
 html_show_sphinx = False
 
