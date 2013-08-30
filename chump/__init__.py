@@ -345,8 +345,8 @@ class PushoverUser(object):
 class PushoverMessage(object):
 	"""
 	A Pushover message. The message is tied to a specific :class:`~chump.Pushover` app,
-	and :class:`~chump.PushoverUser` user. Arguments are exposed as attributes
-	on the message, for convenience.
+	and :class:`~chump.PushoverUser` user. All parameters are exposed as
+	attributes on the message, for convenience.
 	
 	:param user: The user to send the message to.
 	:type user: :class:`~chump.PushoverUser`

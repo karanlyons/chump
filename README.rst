@@ -36,4 +36,4 @@ Documentation
 =============
 
 Full documentation is available at
-`ReadTheDocs <https://readthedocs.org/projects/chump/>`_.
+`ReadTheDocs <https://chump.readthedocs.org/en/latest/>`_.

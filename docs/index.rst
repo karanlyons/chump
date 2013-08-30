@@ -43,7 +43,8 @@ Creating and sending a message yourself:
 ----------------------------------------
 
 If you'd like to send messages yourself, just swap out
-:func:`~chump.User.send_message` for :func:`~chump.User.create_message`:
+:func:`~chump.PushoverUser.send_message`
+for :func:`~chump.PushoverUser.create_message`:
 
 .. code-block:: pycon
 
@@ -88,8 +89,8 @@ API restrictions:
 		u'tugboat', u'none', u'incoming', u'intermission', u'cosmic',
 		u'persistent', u'mechanical', u'climb'], was 'this is not a sound'
 
-All parameters are exposed as attributes on the :class:`~chump.PushoverMessage`
-object, so you can change them later.
+All parameters are exposed as attributes in the :class:`~chump.PushoverMessage`,
+so you can change them later.
 
 
 Sending an emergency message:
