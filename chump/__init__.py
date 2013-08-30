@@ -109,9 +109,9 @@ class Pushover(object):
 	"""
 	
 	def __init__(self, token):
-		self.token = unicode(token) #: The app's API token.
 		self.is_authenticated = False #: A :py:obj:`bool` indicating whether the app has been authenticated.
 		self.sounds = None #: If authenticated, a :py:class:`dict` of available notification sounds, otherwise ``None``.
+		self.token = unicode(token) #: The app's API token.
 	
 	def __setattr__(self, name, value):
 		super(Pushover, self).__setattr__(name, value)
@@ -143,7 +143,7 @@ class Pushover(object):
 			if 'token' in error.bad_inputs:
 				self.is_authenticated = False
 		
-		if self.is_authenticated and not hasattr(self, 'sounds'):
+		if self.is_authenticated and self.sounds is None:
 			self.sounds = self._request('sound')['sounds']
 	
 	def get_user(self, token):
@@ -221,9 +221,9 @@ class PushoverUser(object):
 	
 	def __init__(self, app, token):
 		self.app = app #: The Pushover app to send messages with.
-		self.token = unicode(token) #: The user's API token.
 		self.is_authenticated = None #: If :attr:`.app` has been authenticated, a :py:obj:`bool` indicating whether the user has been authenticated, otherwise ``None``.
 		self.devices = None #: If authenticated, a :py:class:`set` of the user's devices, otherwise None.
+		self.token = unicode(token) #: The user's API token.
 	
 	def __setattr__(self, name, value):
 		super(PushoverUser, self).__setattr__(name, value)
@@ -375,7 +375,7 @@ class PushoverMessage(object):
 		self.error = None #: A :exc:`~chump.PushoverError` if there was an error sending the message, otherwise ``None.
 	
 	def __setattr__(self, name, value):
-		if value:
+		if value and name in {'message', 'title', 'url', 'url_title', 'device', 'callback', 'sound', 'priority', 'retry', 'expire'}:
 			if name in {'message', 'title', 'url', 'url_title', 'device', 'callback', 'sound'}:
 				try:
 					value = unicode(value)
@@ -423,10 +423,10 @@ class PushoverMessage(object):
 					raise TypeError('Bad priority: expected int, got {type}.'.format(type=type(value)))
 			
 			elif name == 'sound' and value not in self.user.app.sounds:
-				raise ValueError('Bad sound: must be in {sounds}, was \'{value}\''.format(sounds=self.user.app.sounds.keys(), value=value))
+				raise ValueError('Bad sound: must be in {sounds}, was u\'{value}\''.format(sounds=self.user.app.sounds.keys(), value=value))
 			
 			elif name == 'device' and value not in self.user.devices:
-				raise ValueError('Bad device: must be in {devices}, was \'{value}\''.format(devices=self.user.devices, value=value))
+				raise ValueError('Bad device: must be in {devices}, was u\'{value}\''.format(devices=self.user.devices, value=value))
 		
 		super(PushoverMessage, self).__setattr__(name, value)
 	
@@ -453,7 +453,8 @@ class PushoverMessage(object):
 				data[kwarg] = getattr(self, kwarg)
 		
 		try:
-			response = self.user.app._request('message', data)
+			# We've got to store this somewhere so that EmergencyPushoverMessage can check it for a receipt.
+			self._response = self.user.app._request('message', data)
 		
 		except PushoverError as error:
 			self.is_sent = False
@@ -469,8 +470,8 @@ class PushoverMessage(object):
 		
 		else:
 			self.is_sent = True
-			self.id = response['request']
-			self.sent_at = response['sent']
+			self.id = self._response['request']
+			self.sent_at = self._response['sent']
 		
 		return self.is_sent
 	
@@ -499,7 +500,7 @@ class EmergencyPushoverMessage(PushoverMessage):
 	def __init__(self, user, message, title=None, timestamp=None, url=None,
 		         url_title=None, device=None, sound=None, callback=None,
 		         retry=30, expire=86400):
-		priority = chump.EMERGENCY
+		priority = EMERGENCY
 		
 		super(EmergencyPushoverMessage, self).__init__(
 			user, message, title, timestamp, url,
@@ -510,11 +511,15 @@ class EmergencyPushoverMessage(PushoverMessage):
 		self.retry = retry
 		self.expire = expire
 		
+		self.receipt = None #: The receipt returned by the endpoint, for polling.
+		
+		self.last_delivered_at = None #: A :py:class:`datetime.datetime` of when the message was last delivered.
+		
 		self.is_acknowledged = None #: A :py:obj:`bool` indicating whether the message has been acknowledged.
 		self.acknowledged_at = None #: A :py:class:`datetime.datetime` of when the message was acknowledged, otherwise ``None``.
 		
 		self.is_expired = None #: A :py:obj:`bool` indicating whether the message has expired.
-		self.expired_at = None #: A :py:class:`datetime.datetime` of when the message expired, otherwise ``None``.
+		self.expires_at = None #: A :py:class:`datetime.datetime` of when the message expires.
 		
 		self.is_called_back = None #: A :py:obj:`bool` indicating whether the message has been called back.
 		self.called_back_at = None #: A :py:class:`datetime.datetime` of when the message was called back, otherwise ``None``.
@@ -529,11 +534,15 @@ class EmergencyPushoverMessage(PushoverMessage):
 		super(EmergencyPushoverMessage, self).__setattr__(name, value)
 	
 	def send(self):
+		self.receipt = None
+		
+		self.last_delivered_at = None
+		
 		self.is_acknowledged = None
 		self.acknowledged_at = None
 		
 		self.is_expired = None
-		self.expired_at = None
+		self.expires_at = None
 		
 		self.is_called_back = None
 		self.called_back_at = None
@@ -541,7 +550,11 @@ class EmergencyPushoverMessage(PushoverMessage):
 		super(EmergencyPushoverMessage, self).send()
 		
 		if self.is_sent:
-			self.receipt = response['receipt']
+			self.receipt = self._response['receipt']
+		
+		self.poll() # Poll immediately to fill attributes.
+		
+		return self.is_sent
 	
 	def poll(self):
 		"""
@@ -561,18 +574,18 @@ class EmergencyPushoverMessage(PushoverMessage):
 		
 		if self.receipt:
 			if not (self.is_expired and self.is_acknowledged and self.is_called_back):
-				response = self.user.app._request('receipt', url='{endpoint}{url}{receipt}.json'.format(
+				self._response = self.user.app._request('receipt', url='{endpoint}{url}{receipt}.json'.format(
 					endpoint=ENDPOINT,
 					url=REQUESTS['receipt']['url'],
 					receipt=self.receipt
 				))
 				
 				for attr in ('acknowledged', 'expired', 'called_back'):
-					setattr(self, 'is_{}'.format(attr), bool(response[attr]))
+					setattr(self, 'is_{}'.format(attr), bool(self._response[attr]))
 					
-					if response[attr]:
-						attr_at = '{}_at'.format(attr)
-						setattr(self, attr_at, epoch_to_datetime(response[attr_at]))
+				for attr_at in ('acknowledged_at', 'expires_at', 'called_back_at', 'last_delivered_at'):
+					if self._response[attr_at]:
+						setattr(self, attr_at, epoch_to_datetime(self._response[attr_at]))
 			
 			return not (self.is_acknowledged or self.is_expired)
 		

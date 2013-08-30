@@ -35,8 +35,8 @@ Install chump just like everything else:
 Usage Examples
 ==============
 
-Chump's meant to be easy to use. Sending a message is just as easy as in the
-example above, but there's more you can do. Here are some examples:
+Chump's meant to be easy to use. Sending a message is just as simple as in the
+example above, but there's more you can do.
 
 
 Creating and sending a message yourself:
