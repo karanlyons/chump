@@ -61,8 +61,8 @@ Sending messages with additional parameters:
 --------------------------------------------
 
 Chump supports all the message parameters outlined in Pushover's
-`API Docs <https://pushover.net/api>`_. Any these parameters can be optionally
-supplied as ``kwargs``:
+`API Docs <https://pushover.net/api>`_. Any of these parameters can be
+optionally supplied as ``kwargs``:
 
 .. code-block:: pycon
 
