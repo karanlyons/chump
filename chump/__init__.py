@@ -23,7 +23,16 @@ __copyright__ = 'Copyright 2013 Karan Lyons'
 
 
 logger = logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
+
+try:
+	logger.addHandler(logging.NullHandler())
+
+except AttributeError:
+	class NullHandler(logging.Handler):
+		def emit(self, record):
+			pass
+	
+	logger.addHandler(NullHandler())
 
 
 try:
@@ -93,7 +102,7 @@ class APIError(Exception):
 		self.messages = self.response['errors'] #: A :py:obj:`list` of human readable error messages.
 		
 		#: A :py:class:`dict` of the inputs the endpoint didn't like and why.
-		self.bad_inputs = dict([(key, value) for key, value in self.response.iteritems() if key not in {'errors', 'messages', 'status', 'receipt', 'request'}])
+		self.bad_inputs = dict([(key, value) for key, value in self.response.iteritems() if key not in set(('errors', 'messages', 'status', 'receipt', 'request'))])
 		
 		logger.debug('APIError raised. Endpoint response was {response}'.format(response=self.response))
 	
@@ -322,8 +331,8 @@ class User(object):
 		return message_class(self, **kwargs)
 	
 	def send_message(self, message, title=None, timestamp=None,
-	                 url=None, url_title=None, device=None, priority=NORMAL,
-	                 callback=None, retry=30, expire=86400, sound=None):
+		             url=None, url_title=None, device=None, priority=NORMAL,
+		             callback=None, retry=30, expire=86400, sound=None):
 		"""
 		Does the same as :func:`.create_message`, but sends them all with
 		:attr:`.app` as well.
@@ -377,24 +386,24 @@ class Message(object):
 		self.error = None #: A :exc:`~chump.APIError` if there was an error sending the message, otherwise ``None.
 	
 	def __setattr__(self, name, value):
-		if value and name in {'message', 'title', 'url', 'url_title', 'device', 'callback', 'sound', 'priority', 'retry', 'expire'}:
-			if name in {'message', 'title', 'url', 'url_title', 'device', 'callback', 'sound'}:
+		if value and name in set(('message', 'title', 'url', 'url_title', 'device', 'callback', 'sound', 'priority', 'retry', 'expire')):
+			if name in set(('message', 'title', 'url', 'url_title', 'device', 'callback', 'sound')):
 				try:
 					value = unicode(value)
 				
 				except ValueError:
 					raise ValueError('Bad {name}: expected string, got {type}'.format(name=name, type=type(value)))
 			
-			if name in {'priority', 'retry', 'expire'}:
+			if name in set(('priority', 'retry', 'expire')):
 				try:
 					value = int(value)
 				
 				except ValueError:
 					raise ValueError('Bad {name}: expected int, got {type}'.format(name=name, type=type(value)))
 			
-			if name in {'message', 'title'}:
+			if name in set(('message', 'title')):
 				length = len(value)
-				length += len(list({'message', 'title'} - {name})[0]) # Yup.
+				length += len(list(set(('message', 'title')) - set((name,)))[0]) # Yup.
 				
 				if length > 512:
 					raise ValueError('Bad {name}: message + title must be <= 512 characters, was {length}'.format(name=name, length=length))
@@ -402,8 +411,8 @@ class Message(object):
 			elif name == 'url' and len(value) > 500:
 				raise ValueError('Bad url: must be <= 500 characters, was {length}'.format(length=len(value)))
 			
-			elif name =='url_title' and len(value) > 50:
-				raise ValueError('Bad url_title: must be <= 500 characters, was {length}'.format(length=len(value)))
+			elif name == 'url_title' and len(value) > 50:
+				raise ValueError('Bad url_title: must be <= 50 characters, was {length}'.format(length=len(value)))
 			
 			elif name == 'timestamp':
 				try:
