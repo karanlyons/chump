@@ -335,7 +335,7 @@ class User(object):
 		
 		message = self.create_message(
 			message, title, timestamp,
-			url, url_title, devices, priority,
+			url, url_title, device, priority,
 			callback, retry, expire, sound
 		)
 		
