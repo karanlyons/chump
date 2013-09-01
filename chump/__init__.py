@@ -339,9 +339,9 @@ class User(object):
 			callback, retry, expire, sound
 		)
 		
-		messages.send()
+		message.send()
 		
-		return messages
+		return message
 
 
 class Message(object):
