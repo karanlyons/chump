@@ -2,6 +2,7 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
+import calendar
 import logging
 import time
 from datetime import datetime
@@ -32,7 +33,7 @@ try:
 	
 	def datetime_to_epoch(d):
 		try:
-			return int(time.mktime(d.astimezone(pytz.utc).timetuple()))
+			return int(calendar.timegm(d.astimezone(pytz.utc).timetuple()))
 		
 		except ValueError:
 			return int(time.mktime(d.timetuple()))
