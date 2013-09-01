@@ -11,7 +11,7 @@ from email.utils import parsedate
 import requests
 
 
-VERSION = (1, 2, 1)
+VERSION = (1, 3, 0)
 
 __title__ = 'Chump'
 __version__ = '.'.join((str(i) for i in VERSION)) # str for compatibility with setup.py under Python 3.
@@ -317,7 +317,7 @@ class User(object):
 		
 		"""
 		
-		kwargs = locals()
+		kwargs = locals().copy()
 		kwargs.pop('self')
 		
 		if priority == 2:
@@ -591,7 +591,7 @@ class EmergencyMessage(Message):
 				))
 				
 				for attr in ('acknowledged', 'expired', 'called_back'):
-					setattr(self, 'is_{}'.format(attr), bool(self._response[attr]))
+					setattr(self, 'is_{0}'.format(attr), bool(self._response[attr]))
 					
 				for attr_at in ('acknowledged_at', 'expires_at', 'called_back_at', 'last_delivered_at'):
 					if self._response[attr_at]:
