@@ -334,7 +334,7 @@ class User(object):
 		             url=None, url_title=None, device=None, priority=NORMAL,
 		             callback=None, retry=30, expire=86400, sound=None):
 		"""
-		Does the same as :func:`.create_message`, but sends them all with
+		Does the same as :meth:`.create_message`, but sends them all with
 		:attr:`.app` as well.
 		
 		:returns: A sent message.
@@ -362,7 +362,7 @@ class Message(object):
 	:param user: The user to send the message to.
 	:type user: :class:`~chump.User`
 	
-	All other arguments are the same as in :func:`User.create_message`.
+	All other arguments are the same as in :meth:`User.create_message`.
 	
 	"""
 	
@@ -504,7 +504,7 @@ class EmergencyMessage(Message):
 	
 	All arguments are the same as in :class:`~chump.Message`, with the
 	additions of ``call_back``, ``retry``, and ``timeout``, which
-	are all, too, as defined in :func:`User.create_message`.
+	are all, too, as defined in :meth:`User.create_message`.
 	
 	"""
 	

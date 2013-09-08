@@ -43,8 +43,8 @@ Creating and sending a message yourself:
 ----------------------------------------
 
 If you'd like to send messages yourself, just swap out
-:func:`~chump.User.send_message`
-for :func:`~chump.User.create_message`:
+:meth:`~chump.User.send_message`
+for :meth:`~chump.User.create_message`:
 
 .. code-block:: pycon
 
@@ -101,7 +101,7 @@ require dismissal from the user, and if not dismissed they'll keep popping up
 every ``retry`` seconds until ``timeout`` seconds from when they were sent. When
 the user acknowledges the message, ``callback`` will be pinged by Pushover's
 servers, but you can also check in on the message's status by calling
-:func:`~chump.EmergencyMessage.poll`:
+:meth:`~chump.EmergencyMessage.poll`:
 
 .. code-block:: pycon
 
@@ -116,7 +116,7 @@ servers, but you can also check in on the message's status by calling
 	>>> str(message.acknowledged_at)
 	'1995-12-24 06:10:39+00:00'
 
-:func:`~chump.EmergencyMessage.poll` returns ``True`` whilst the message
+:meth:`~chump.EmergencyMessage.poll` returns ``True`` whilst the message
 has not been acknowledged, so you can use it as an argument in while loops.
 
 
