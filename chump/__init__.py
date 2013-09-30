@@ -11,7 +11,7 @@ from email.utils import parsedate
 import requests
 
 
-VERSION = (1, 3, 0)
+VERSION = (1, 3, 1)
 
 __title__ = 'Chump'
 __version__ = '.'.join((str(i) for i in VERSION)) # str for compatibility with setup.py under Python 3.
@@ -266,7 +266,7 @@ class User(object):
 				self.is_authenticated = None
 				self.devices = None
 			
-			elif 'user' not in error.bad_inputs:
+			elif 'user' not in error.bad_inputs or error.bad_inputs['user'].startswith('valid'):
 				self.is_authenticated = True
 				self.devices = set()
 			
