@@ -11,7 +11,7 @@ from email.utils import parsedate
 import requests
 
 
-VERSION = (1, 3, 1)
+VERSION = (1, 3, 2)
 
 __title__ = 'Chump'
 __version__ = '.'.join((str(i) for i in VERSION)) # str for compatibility with setup.py under Python 3.
