@@ -397,6 +397,9 @@ class Message(object):
 		self.error = None #: A :exc:`~chump.APIError` if there was an error sending the message, otherwise ``None.
 	
 	def __setattr__(self, name, value):
+		if name == 'message' and len(value) == 0:
+			raise ValueError('Bad message: must be > 0 characters, was 0')
+		
 		if value and name in set(('message', 'title', 'url', 'url_title', 'device', 'callback', 'sound', 'priority', 'retry', 'expire')):
 			if name in set(('message', 'title', 'url', 'url_title', 'device', 'callback', 'sound')):
 				try:
@@ -414,7 +417,7 @@ class Message(object):
 			
 			if name in set(('message', 'title')):
 				length = len(value)
-				length += len(list(set(('message', 'title')) - set((name,)))[0]) # Yup.
+				length += len(getattr(self, list(set(('message', 'title')) - set((name,)))[0], '')) # Yup.
 				
 				if length > 512:
 					raise ValueError('Bad {name}: message + title must be <= 512 characters, was {length}'.format(name=name, length=length))
