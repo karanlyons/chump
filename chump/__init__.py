@@ -59,7 +59,8 @@ except:
 	def http_date_to_datetime(t): return datetime(*parsedate(t)[:6])
 
 
-LOW = -1 #: Message priority: No sound, no vibration, no banner.
+LOWEST = -2 #: Message priority: No sound, no vibration, no banner.
+LOW = -1 #: Message priority: No sound, no vibration, and banner.
 NORMAL = 0 #: Message priority: Sound, vibration, and banner if outside of user's quiet hours.
 HIGH = 1 #: Message priority: Sound, vibration, and banner regardless of user's quiet hours.
 EMERGENCY = 2 #: Message priority: Sound, vibration, and banner regardless of user's quiet hours, and re-alerts until acknowledged.
@@ -295,9 +296,10 @@ class User(object):
 		:param string device: (optional) device from
 			:attr:`.devices` to send to. Defaults to all of the user's devices.
 		:param int priority: (optional) priority for the message. The
-			constants :const:`~chump.LOW`, :const:`~chump.NORMAL`,
-			:const:`~chump.HIGH`, and :const:`~chump.EMERGENCY` may be used for
-			convenience. Defaults to :const:`~chump.NORMAL`.
+			constants :const:`~chump.LOWEST`, :const:`~chump.LOW`,
+			:const:`~chump.NORMAL`, :const:`~chump.HIGH`, and
+			:const:`~chump.EMERGENCY` may be used for convenience. Defaults
+			to :const:`~chump.NORMAL`.
 		:param string callback: (optional) If priority is
 			:const:`~chump.EMERGENCY`, the url to ping when the message
 			is acknowledged. Defaults to ``None``.
@@ -427,8 +429,8 @@ class Message(object):
 			
 			elif name == 'priority':
 				try:
-					if not -1 <= int(value) <= 2:
-						raise ValueError('Bad priority: must be between -1 and 2, was {value}'.format(value=value))
+					if not -2 <= int(value) <= 2:
+						raise ValueError('Bad priority: must be between -2 and 2, was {value}'.format(value=value))
 				
 				except TypeError:
 					raise TypeError('Bad priority: expected int, got {type}.'.format(type=type(value)))
