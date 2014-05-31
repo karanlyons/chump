@@ -123,6 +123,10 @@ class Application(object):
 		self.is_authenticated = False #: A :py:obj:`bool` indicating whether the app has been authenticated.
 		self.sounds = None #: If authenticated, a :py:class:`dict` of available notification sounds, otherwise ``None``.
 		self.token = unicode(token) #: The app's API token.
+		
+		self.limit = None #: If a message has been sent, a :py:obj:`int` representing the application's monthly message limit, otherwise ``None``.
+		self.remaining = None #: If a message has been sent, a :py:obj:`int` representing the application's remaining message allotment, otherwise ``None``.
+		self.reset = None #: If a message has been sent, :py:class:`datetime.datetime` representing when the application's monthly message limit will reset, otherwise ``None``.
 	
 	def __setattr__(self, name, value):
 		super(Application, self).__setattr__(name, value)
@@ -199,7 +203,7 @@ class Application(object):
 		
 		response = getattr(requests, REQUESTS[request]['method'])(url, params=data)
 		
-		logger.debug('Response ({code}): {text}'.format(code=response.status_code, text=response.text))
+		logger.debug('Response ({code}):\n{headers}\n{text}'.format(code=response.status_code, headers=response.headers, text=response.text))
 		
 		if response.status_code == 200 or 400 <= response.status_code < 500:
 			json = response.json()
@@ -209,6 +213,11 @@ class Application(object):
 				raise APIError(json)
 			
 			else:
+				if request == 'message':
+					self.limit = int(response.headers['X-Limit-App-Limit'])
+					self.remaining = int(response.headers['X-Limit-App-Remaining'])
+					self.reset = epoch_to_datetime(int(response.headers['X-Limit-App-Reset']))
+				
 				return json
 		
 		else:
