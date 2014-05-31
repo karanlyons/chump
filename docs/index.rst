@@ -155,7 +155,7 @@ Constants
 ---------
 
 .. automodule:: chump
-	:members: LOW, NORMAL, HIGH, EMERGENCY
+	:members: LOWEST, LOW, NORMAL, HIGH, EMERGENCY
 
 
 .. include:: ../HISTORY.rst
