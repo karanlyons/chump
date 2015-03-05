@@ -4,16 +4,28 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 import logging
 import re
-import urllib
 from calendar import timegm
 from datetime import datetime, timedelta
 from email.utils import parsedate_tz
 
-try:
-	import ujson as json
+try: import ujson as json
+except ImportError: import json
 
-except ImportError:
-	import json
+try: unicode # Python 2
+except NameError: unicode = str # Python 3
+else: # Python 2
+	def bytes(s, encoding=None, errors=None):
+		return s.encode(encoding, errors)
+
+try: # Python 3
+	from urllib.request import urlopen
+	from urllib.parse import urlencode
+	from urllib.error import HTTPError
+
+except ImportError: # Python 2
+	from urllib import urlopen, urlencode
+	
+	class HTTPError(Exception): pass
 
 
 VERSION = (1, 5, 0)
@@ -65,6 +77,8 @@ except ImportError:
 		
 		def __unicode__(self):
 			return 'UTC'
+		
+		__str__ = __unicode__
 		
 		def __repr__(self):
 			return '<UTC>'
@@ -152,7 +166,7 @@ class APIError(Exception):
 		self.errors = self.response['errors'] #: A :py:obj:`list` of human readable error messages as :py:obj:`unicode`\s.
 		
 		#: A :py:class:`dict` of the request's original arguments that the endpoint didn't like as :py:obj:`unicode`\s and why, also as :py:obj:`unicode`\s.
-		self.bad_inputs = dict([(key, value) for key, value in self.response.iteritems() if key not in set(('errors', 'status', 'receipt', 'request'))])
+		self.bad_inputs = dict([(key, value) for key, value in self.response.items() if key not in set(('errors', 'status', 'receipt', 'request'))])
 		
 		self.receipt = self.response.get('receipt', None) #: A :py:obj:`unicode` of the message's receipt if it was an emergency message, otherwise :py:obj:`None`.
 		
@@ -160,6 +174,8 @@ class APIError(Exception):
 	
 	def __unicode__(self):
 		return "({id}) {errors}".format(id=self.id, errors=", ".join(self.errors))
+	
+	__str__ = __unicode__
 	
 	def __repr__(self):
 		return "APIError(url={url!r}, request={request!r}, response={response!r}, timestamp={timestamp!r})".format(**vars(self))
@@ -195,6 +211,8 @@ class Application(object):
 	def __unicode__(self):
 		return "Pushover Application: {token}".format(token=self.token)
 	
+	__str__ = __unicode__
+	
 	def __repr__(self):
 		return 'Application(token={token!r})'.format(token=self.token)
 	
@@ -206,11 +224,7 @@ class Application(object):
 	
 	def __lt__(self, other): return NotImplemented
 	
-	def __le__(self, other): return NotImplemented
-	
-	def __gt__(self, other): return NotImplemented
-	
-	def __ge__(self, other): return NotImplemented
+	__le__ = __gt__ = __ge__ = __lt__
 	
 	def _authenticate(self):
 		"""
@@ -280,16 +294,21 @@ class Application(object):
 		
 		method = REQUESTS[request]['method']
 		
-		if method == 'get':
-			if data:
-				url += '?' + urllib.urlencode(data)
+		try:
+			if method == 'get':
+				if data:
+					url += '?' + urlencode(data)
+				
+				response = urlopen(url)
 			
-			response = urllib.urlopen(url)
+			elif method == 'post':
+				response = urlopen(url, bytes(urlencode(data), 'utf-8', 'strict') if data else None)
 		
-		elif method == 'post':
-			response = urllib.urlopen(url, urllib.urlencode(data) if data else None)
+		except HTTPError as e: # Python 3 on "error" status codes.
+			response = e
+			response.__dict__['headers'] = response.hdrs
 		
-		response.content = response.read()
+		response.content = response.read().decode()
 		
 		logger.debug('Response ({code}):\n{headers}\n{content}'.format(**vars(response)))
 		
@@ -347,6 +366,8 @@ class User(object):
 	def __unicode__(self):
 		return "Pushover User: {token}".format(token=self.token)
 	
+	__str__ = __unicode__
+	
 	def __repr__(self):
 		return 'User(app={app!r}, token={token!r})'.format(**vars(self))
 	
@@ -358,11 +379,7 @@ class User(object):
 	
 	def __lt__(self, other): return NotImplemented
 	
-	def __le__(self, other): return NotImplemented
-	
-	def __gt__(self, other): return NotImplemented
-	
-	def __ge__(self, other): return NotImplemented
+	__le__ = __gt__ = __ge__ = __lt__
 	
 	def _authenticate(self):
 		"""
@@ -509,6 +526,8 @@ class Message(object):
 		else:
 			return self.message
 	
+	__str__ = __unicode__
+	
 	def __eq__(self, other):
 		return isinstance(other, self.__class__) and self.id and self.id == other.id
 	
@@ -517,11 +536,7 @@ class Message(object):
 	
 	def __lt__(self, other): return NotImplemented
 	
-	def __le__(self, other): return NotImplemented
-	
-	def __gt__(self, other): return NotImplemented
-	
-	def __ge__(self, other): return NotImplemented
+	__le__ = __gt__ = __ge__ = __lt__
 	
 	def __setattr__(self, name, value):
 		if name == 'message' and len(value) == 0:
