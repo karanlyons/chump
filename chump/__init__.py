@@ -601,10 +601,10 @@ class Message(object):
 					raise TypeError('Bad priority: expected int, got {}.'.format(type(value)))
 			
 			elif name == 'sound' and value not in self.user.app.sounds:
-				raise ValueError('Bad sound: must be in ({sounds}), was {value!r}'.format(sounds=', '.join(self.user.app.sounds.keys()), value=value))
+				raise ValueError('Bad sound: must be in ({sounds}), was {value!r}'.format(sounds=', '.join(repr(s) for s in sorted(self.user.app.sounds.keys())), value=value))
 			
 			elif name == 'device' and value not in self.user.devices:
-				raise ValueError('Bad device: must be in ({devices}), was {value!r}'.format(devices=', '.join(self.user.devices), value=value))
+				raise ValueError('Bad device: must be in ({devices}), was {value!r}'.format(devices=', '.join(repr(s) for s in sorted(self.user.devices)), value=value))
 		
 		super(Message, self).__setattr__(name, value)
 	

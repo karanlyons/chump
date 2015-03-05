@@ -21,10 +21,10 @@ Chump is an Apache2 Licensed, fully featured API wrapper for
 	True
 	>>> user = app.get_user('KAGAw2ZMxDJVhW2HAUiSZEamwGebNa')
 	>>> user.is_authenticated, user.devices
-	(True, set([u'iPhone']))
+	(True, {'iPhone'})
 	>>> message = user.send_message("What's up, dog?")
-	>>> message.is_sent, message.id, unicode(message.sent_at)
-	(True, u'7LjjD6bK8hgqdK6aJzZUblOPPH9cVpjZ', u'2005-10-05 07:50:40+00:00')
+	>>> message.is_sent, message.id, str(message.sent_at)
+	(True, '7LjjD6bK8hgqdK6aJzZUblOPPH9cVpjZ', '2005-10-05 07:50:40+00:00')
 
 
 Installation
