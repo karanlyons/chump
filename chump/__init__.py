@@ -192,7 +192,7 @@ class Application(object):
 				self.is_authenticated = False
 		
 		if self.is_authenticated and self.sounds is None:
-			self.sounds = self._request('sound')['sounds']
+			self.sounds = self._request('sound')[0]['sounds']
 	
 	def get_user(self, token):
 		"""
@@ -217,8 +217,11 @@ class Application(object):
 		:param string url: (optional) URL to send payload to. Defaults to the
 			URL specified by :param:request.
 		
-		:returns: Response's ``json``.
-		:rtype: ``json``.
+		:returns: An :py:obj:`tuple` of (``response``, ``timestamp``), where
+			``response`` is a :py:obj:`dict` representing the ``json`` response
+			and ``timestamp`` is a :py:class:`datetime.datetime` representing
+			the time the response was returned.
+		:rtype: :py:obj:`tuple`.
 		
 		:raises: :exc:`~chump.APIError` when request or response is invalid.
 		
@@ -240,7 +243,7 @@ class Application(object):
 		
 		if response.status_code == 200 or 400 <= response.status_code < 500:
 			json = response.json()
-			json['sent'] = http_date_to_datetime(response.headers['date'])
+			timestamp = http_date_to_datetime(response.headers['date'])
 			
 			if 400 <= response.status_code < 500:
 				raise APIError(json)
@@ -251,7 +254,7 @@ class Application(object):
 					self.remaining = int(response.headers['X-Limit-App-Remaining'])
 					self.reset = epoch_to_datetime(response.headers['X-Limit-App-Reset'])
 				
-				return json
+				return (json, timestamp)
 		
 		else:
 			raise APIError({
@@ -301,7 +304,7 @@ class User(object):
 		"""
 		
 		try:
-			response = self.app._request('validate', {'user': self.token})
+			response, _ = self.app._request('validate', {'user': self.token})
 		
 		except APIError as error:
 			if 'token' in error.bad_inputs: # We can't authenticate users with a bad API token.
@@ -524,7 +527,7 @@ class Message(object):
 		
 		try:
 			# We've got to store this somewhere so that EmergencyMessage can check it for a receipt.
-			self._response = self.user.app._request('message', data)
+			self._response, self.sent_at = self.user.app._request('message', data)
 		
 		except APIError as error:
 			self.is_sent = False
@@ -541,7 +544,6 @@ class Message(object):
 		else:
 			self.is_sent = True
 			self.id = self._response['request']
-			self.sent_at = self._response['sent']
 		
 		return self.is_sent
 	
@@ -582,6 +584,7 @@ class EmergencyMessage(Message):
 		self.expire = expire
 		
 		self.receipt = None #: The receipt returned by the endpoint, for polling.
+		self.last_polled_at = None #: A :py:class:`datetime.datetime` of when the message was last polled.
 		
 		self.last_delivered_at = None #: A :py:class:`datetime.datetime` of when the message was last delivered.
 		
@@ -643,7 +646,7 @@ class EmergencyMessage(Message):
 		
 		if self.receipt:
 			if not (self.is_expired and self.is_acknowledged and self.is_called_back):
-				self._response = self.user.app._request('receipt', url='{endpoint}{url}{receipt}.json'.format(
+				self._response, self.last_polled_at = self.user.app._request('receipt', url='{endpoint}{url}{receipt}.json'.format(
 					endpoint=ENDPOINT,
 					url=REQUESTS['receipt']['url'],
 					receipt=self.receipt
