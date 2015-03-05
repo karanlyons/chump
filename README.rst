@@ -2,12 +2,12 @@
 Chump
 #####
 
-.. image:: https://badge.fury.io/py/chump.svg
-	:target: https://badge.fury.io/py/chump
+.. image:: https://img.shields.io/pypi/v/chump.svg
+	:target: https://pypi.python.org/pypi/chump
 	:alt: PyPI Version
 
-.. image:: https://readthedocs.org/projects/chump/badge/?version=latest
-	:target: https://readthedocs.org/projects/chump/?badge=latest
+.. image:: https://img.shields.io/badge/docs-latest-blue.svg
+	:target: https://chump.readthedocs.org/en/latest/
 	:alt: Documentation Status
 
 Chump is an Apache2 Licensed, fully featured API wrapper for
@@ -21,10 +21,10 @@ Chump is an Apache2 Licensed, fully featured API wrapper for
 	True
 	>>> user = app.get_user('KAGAw2ZMxDJVhW2HAUiSZEamwGebNa')
 	>>> user.is_authenticated, user.devices
-	(True, set([u'iPhone']))
+	(True, {'iPhone'})
 	>>> message = user.send_message("What's up, dog?")
 	>>> message.is_sent, message.id, str(message.sent_at)
-	(True, u'7LjjD6bK8hgqdK6aJzZUblOPPH9cVpjZ', '2005-10-05 07:50:40+00:00')
+	(True, '7LjjD6bK8hgqdK6aJzZUblOPPH9cVpjZ', '2005-10-05 07:50:40+00:00')
 
 
 Installation

@@ -22,7 +22,10 @@ extensions = [
 	'sphinx.ext.viewcode',
 	'sphinx.ext.coverage'
 ]
+
+autodoc_member_order = 'bysource'
 intersphinx_mapping = {'python': ('http://docs.python.org/2.7', None)}
+
 templates_path = ['_templates']
 exclude_patterns = ['_build']
 html_theme_path = ['_themes']
