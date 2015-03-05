@@ -2,12 +2,12 @@
 Chump
 #####
 
-.. image:: https://badge.fury.io/py/chump.svg
-	:target: https://badge.fury.io/py/chump
+.. image:: https://img.shields.io/pypi/v/chump.svg
+	:target: https://pypi.python.org/pypi/chump
 	:alt: PyPI Version
 
-.. image:: https://readthedocs.org/projects/chump/badge/?version=latest
-	:target: https://readthedocs.org/projects/chump/?badge=latest
+.. image:: https://img.shields.io/badge/docs-latest-blue.svg
+	:target: https://chump.readthedocs.org/en/latest/
 	:alt: Documentation Status
 
 Chump is an Apache2 Licensed, fully featured API wrapper for
