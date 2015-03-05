@@ -606,11 +606,18 @@ class EmergencyMessage(Message):
 		self.called_back_at = None #: A :py:class:`datetime.datetime` of when the message was called back, otherwise ``None``.
 	
 	def __setattr__(self, name, value):
+		if name in ('retry', 'expire'):
+			try:
+				value = int(value)
+			
+			except ValueError:
+				raise ValueError('Bad {name}: expected int, got {type}'.format(name=name, type=type(value)))
+		
 		if name == 'retry' and value < 30:
 			raise ValueError('Bad retry: must be >= 30, was {}'.format(value))
 		
-		elif name == 'expire' and value > 86400:
-			raise ValueError('Bad expire: must be <= 86400, was {}'.format(value))
+		elif name == 'expire' and not 0 < value <= 86400:
+			raise ValueError('Bad expire: must be <= 86400 and >= 0, was {}'.format(value))
 		
 		super(EmergencyMessage, self).__setattr__(name, value)
 	
