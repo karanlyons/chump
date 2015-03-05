@@ -128,20 +128,28 @@ class APIError(Exception):
 	
 	"""
 	
-	def __init__(self, response):
-		self.response = response #: The json response from the endpoint.
-		self.status = self.response['status'] #: The status code.
-		self.request_id = self.response['request'] #: The request's id.
+	def __init__(self, url, request, response, timestamp):
+		self.url = url #: A :py:obj:`str` of the URL of the original request.
+		self.request = request #: A :py:obj:`dict` of the original request payload.
+		self.response = response #: A :py:obj:`dict` of the json response from the endpoint.
+		self.timestamp = timestamp #: A :py:class:`datetime.datetime` of when this error was raised.
 		
-		self.messages = self.response['errors'] #: A :py:obj:`list` of human readable error messages.
+		self.id = self.response['request'] #: A :py:obj:`str` of the request's id.
+		self.status = self.response['status'] #: A :py:obj:`int` of the status code.
+		self.errors = self.response['errors'] #: A :py:obj:`list` of human readable error messages as :py:obj:`str`s.
 		
-		#: A :py:class:`dict` of the inputs the endpoint didn't like and why.
-		self.bad_inputs = dict([(key, value) for key, value in self.response.iteritems() if key not in set(('errors', 'messages', 'status', 'receipt', 'request'))])
+		#: A :py:class:`dict` of the request's original arguments that the endpoint didn't like as :py:obj:`str`s and why, also as :py:obj:`str`s.
+		self.bad_inputs = dict([(key, value) for key, value in self.response.iteritems() if key not in set(('errors', 'status', 'receipt', 'request'))])
 		
-		logger.debug('APIError raised. Endpoint response was {response}'.format(response=self.response))
+		self.receipt = self.response.get('receipt', None) #: A :py:obj:`str` of the message's receipt if it was an emergency message, otherwise ``None``.
+		
+		logger.debug('APIError raised. Endpoint response was {}'.format(self.response))
 	
 	def __str__(self):
-		return "({id}) {messages}".format(id=self.request_id, messages=" ".join(self.messages))
+		return "({id}) {errors}".format(id=self.id, errors=", ".join(self.errors))
+	
+	def __repr__(self):
+		return "APIError(url={url!r}, request={request!r}, response={response!r}, timestamp={timestamp!r})".format(**vars(self))
 
 
 class Application(object):
@@ -246,7 +254,7 @@ class Application(object):
 			timestamp = http_date_to_datetime(response.headers['date'])
 			
 			if 400 <= response.status_code < 500:
-				raise APIError(json)
+				raise APIError(url, data, json, timestamp)
 			
 			else:
 				if request == 'message':
@@ -257,11 +265,11 @@ class Application(object):
 				return (json, timestamp)
 		
 		else:
-			raise APIError({
+			raise APIError(url, data, {
 				'request': None,
 				'status': 0,
-				'messages': ['unknown error ({code})'.format(code=response.status_code)],
-			})
+				'errors': ['unknown error ({code})'.format(code=response.status_code)],
+			}, timestamp)
 
 
 class User(object):
