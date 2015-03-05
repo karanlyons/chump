@@ -57,7 +57,7 @@ except ImportError:
 		def localize(self, dt):
 			return dt.replace(tzinfo=self)
 		
-		def __str__(self):
+		def __unicode__(self):
 			return 'UTC'
 		
 		def __repr__(self):
@@ -149,7 +149,7 @@ class APIError(Exception):
 		
 		logger.debug('APIError raised. Endpoint response was {}'.format(self.response))
 	
-	def __str__(self):
+	def __unicode__(self):
 		return "({id}) {errors}".format(id=self.id, errors=", ".join(self.errors))
 	
 	def __repr__(self):
@@ -179,11 +179,8 @@ class Application(object):
 		if name == 'token':
 			self._authenticate()
 	
-	def __str__(self):
-		return "Pushover App: {token}".format(token=self.token)
-		
 	def __unicode__(self):
-		return self.__str__()
+		return "Pushover App: {token}".format(token=self.token)
 	
 	def __repr__(self):
 		return 'Application(token={token!r})'.format(token=self.token)
@@ -300,11 +297,8 @@ class User(object):
 		if name == 'token':
 			self._authenticate()
 	
-	def __str__(self):
-		return "Pushover User: {token}".format(token=self.token)
-	
 	def __unicode__(self):
-		return self.__str__()
+		return "Pushover User: {token}".format(token=self.token)
 	
 	def __repr__(self):
 		return 'User(app={app!r}, token={token!r})'.format(**vars(self))
@@ -467,7 +461,7 @@ class Message(object):
 					value = unicode(value)
 				
 				except ValueError:
-					raise ValueError('Bad {name}: expected string, got {type}'.format(name=name, type=type(value)))
+					raise ValueError('Bad {name}: expected unicode, got {type}'.format(name=name, type=type(value)))
 			
 			elif name in set(('priority', 'retry', 'expire')):
 				try:
@@ -559,15 +553,12 @@ class Message(object):
 		
 		return self.is_sent
 	
-	def __str__(self):
+	def __unicode__(self):
 		if self.title:
 			return "({title}) {message}".format(**vars(self))
 		
 		else:
 			return self.message
-	
-	def __unicode__(self):
-		return self.__str__()
 
 
 class EmergencyMessage(Message):
