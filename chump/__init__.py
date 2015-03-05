@@ -182,7 +182,7 @@ class Application(object):
 		return self.__str__()
 	
 	def __repr__(self):
-		return 'Application(token=\'{token}\')'.format(token=self.token)
+		return 'Application(token={token!r})'.format(token=self.token)
 	
 	def _authenticate(self):
 		"""
@@ -243,11 +243,11 @@ class Application(object):
 		if url is None:
 			url = ENDPOINT + REQUESTS[request]['url']
 		
-		logger.debug('Making request ({request}): {data}'.format(request=request, data=unicode(data)))
+		logger.debug('Making request ({request}): {data}'.format(request=request, data=data))
 		
 		response = getattr(requests, REQUESTS[request]['method'])(url, params=data)
 		
-		logger.debug('Response ({code}):\n{headers}\n{text}'.format(code=response.status_code, headers=response.headers, text=response.text))
+		logger.debug('Response ({status_code}):\n{headers}\n{_content}'.format(**vars(response)))
 		
 		if response.status_code == 200 or 400 <= response.status_code < 500:
 			json = response.json()
@@ -303,7 +303,7 @@ class User(object):
 		return self.__str__()
 	
 	def __repr__(self):
-		return 'User(app={app}, token=\'{token}\')'.format(app=repr(self.app), token=self.token)
+		return 'User(app={app!r}, token={token!r})'.format(**vars(self))
 	
 	def _authenticate(self):
 		"""
@@ -451,11 +451,11 @@ class Message(object):
 				value = int(value)
 			
 			except ValueError:
-				raise ValueError('Bad html: expected bool, got {type}'.format(type=type(value)))
+				raise ValueError('Bad html: expected bool, got {}'.format(value_type))
 			
 			else:
 				if value not in (0, 1):
-					raise ValueError('Bad html: expected bool, got {type} whose not coercible to (0, 1)'.format(type=value_type))
+					raise ValueError('Bad html: expected bool, got {} whose not coercible to (0, 1)'.format(value_type))
 		
 		if value and name in set(('message', 'title', 'url', 'url_title', 'device', 'callback', 'sound', 'priority', 'retry', 'expire')):
 			if name in set(('message', 'title', 'url', 'url_title', 'device', 'callback', 'sound')):
@@ -493,21 +493,21 @@ class Message(object):
 						value = epoch_to_datetime(value)
 				
 				except (TypeError, ValueError):
-					raise TypeError('Bad timestamp: expected valid int or datetime, got {type}.'.format(type=type(value)))
+					raise TypeError('Bad timestamp: expected valid int or datetime, got {}.'.format(type(value)))
 			
 			elif name == 'priority':
 				try:
 					if not -2 <= int(value) <= 2:
-						raise ValueError('Bad priority: must be between -2 and 2, was {value}'.format(value=value))
+						raise ValueError('Bad priority: must be between -2 and 2, was {!r}'.format(value))
 				
 				except TypeError:
-					raise TypeError('Bad priority: expected int, got {type}.'.format(type=type(value)))
+					raise TypeError('Bad priority: expected int, got {}.'.format(type(value)))
 			
 			elif name == 'sound' and value not in self.user.app.sounds:
-				raise ValueError('Bad sound: must be in {sounds}, was {value}'.format(sounds=self.user.app.sounds.keys(), value=repr(value)))
+				raise ValueError('Bad sound: must be in ({sounds}), was {value!r}'.format(sounds=', '.join(self.user.app.sounds.keys()), value=value))
 			
 			elif name == 'device' and value not in self.user.devices:
-				raise ValueError('Bad device: must be in {devices}, was {value}'.format(devices=self.user.devices, value=repr(value)))
+				raise ValueError('Bad device: must be in ({devices}), was {value!r}'.format(devices=', '.join(self.user.devices), value=value))
 		
 		super(Message, self).__setattr__(name, value)
 	
@@ -557,7 +557,7 @@ class Message(object):
 	
 	def __str__(self):
 		if self.title:
-			return "({title}) {message}".format(title=self.title, message=self.message)
+			return "({title}) {message}".format(**vars(self))
 		
 		else:
 			return self.message
@@ -607,10 +607,10 @@ class EmergencyMessage(Message):
 	
 	def __setattr__(self, name, value):
 		if name == 'retry' and value < 30:
-			raise ValueError('Bad retry: must be >= 30, was {value}'.format(value=value))
+			raise ValueError('Bad retry: must be >= 30, was {}'.format(value))
 		
 		elif name == 'expire' and value > 86400:
-			raise ValueError('Bad expire: must be <= 86400, was {value}'.format(value=value))
+			raise ValueError('Bad expire: must be <= 86400, was {}'.format(value))
 		
 		super(EmergencyMessage, self).__setattr__(name, value)
 	
@@ -661,7 +661,7 @@ class EmergencyMessage(Message):
 				))
 				
 				for attr in ('acknowledged', 'expired', 'called_back'):
-					setattr(self, 'is_{0}'.format(attr), bool(self._response[attr]))
+					setattr(self, 'is_{}'.format(attr), bool(self._response[attr]))
 					
 				for attr_at in ('acknowledged_at', 'expires_at', 'called_back_at', 'last_delivered_at'):
 					if self._response[attr_at]:
