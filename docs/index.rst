@@ -2,8 +2,9 @@
 Chump
 #####
 
-.. image:: https://badge.fury.io/py/chump.png
-	:target: http://badge.fury.io/py/chump
+.. image:: https://badge.fury.io/py/chump.svg
+	:target: https://badge.fury.io/py/chump
+	:alt: PyPI Version
 
 Chump is an Apache2 Licensed, fully featured API wrapper for
 `Pushover <https://pushover.net>`_:
@@ -39,8 +40,8 @@ Chump's meant to be easy to use. Sending a message is just as simple as in the
 example above, but there's more you can do.
 
 
-Creating and sending a message yourself:
-----------------------------------------
+Creating and sending a message yourself
+---------------------------------------
 
 If you'd like to send messages yourself, just swap out
 :meth:`~chump.User.send_message`
@@ -57,8 +58,8 @@ for :meth:`~chump.User.create_message`:
 	(True, u'fZSrekCvxi2vnpVADWBNchAGrllDi4cZ', '1993-12-17 06:03:45+00:00')
 
 
-Sending messages with additional parameters:
---------------------------------------------
+Sending messages with additional parameters
+-------------------------------------------
 
 Chump supports all the message parameters outlined in Pushover's
 `API Docs <https://pushover.net/api>`_. Any of these parameters can be
@@ -93,8 +94,8 @@ All parameters are exposed as attributes in the :class:`~chump.Message`,
 so you can change them later.
 
 
-Sending an emergency message:
------------------------------
+Sending an emergency message
+----------------------------
 
 Pushover's emergency messages have a few additions over standard messages. They
 require dismissal from the user, and if not dismissed they'll keep popping up

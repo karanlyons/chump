@@ -2,8 +2,13 @@
 Chump
 #####
 
-.. image:: https://badge.fury.io/py/chump.png
-	:target: http://badge.fury.io/py/chump
+.. image:: https://badge.fury.io/py/chump.svg
+	:target: https://badge.fury.io/py/chump
+	:alt: PyPI Version
+
+.. image:: https://readthedocs.org/projects/chump/badge/?version=latest
+	:target: https://readthedocs.org/projects/chump/?badge=latest
+	:alt: Documentation Status
 
 Chump is an Apache2 Licensed, fully featured API wrapper for
 `Pushover <https://pushover.net>`_:
