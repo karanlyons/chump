@@ -116,7 +116,11 @@ REQUESTS = {
 	'receipt': {
 		'method': 'get',
 		'url': 'receipts/'
-	}
+	},
+	'cancel': {
+		'method': 'post',
+		'path': 'receipts/'
+	},
 }
 
 
@@ -598,6 +602,7 @@ class EmergencyMessage(Message):
 		
 		self.is_acknowledged = None #: A :py:obj:`bool` indicating whether the message has been acknowledged.
 		self.acknowledged_at = None #: A :py:class:`datetime.datetime` of when the message was acknowledged, otherwise ``None``.
+		self.acknowledged_by = None #: A :class:`~chump.User` of the first user to have acknowledged the notification, otherwise :py:obj:`None`.
 		
 		self.is_expired = None #: A :py:obj:`bool` indicating whether the message has expired.
 		self.expires_at = None #: A :py:class:`datetime.datetime` of when the message expires.
@@ -628,6 +633,7 @@ class EmergencyMessage(Message):
 		
 		self.is_acknowledged = None
 		self.acknowledged_at = None
+		self.acknowledged_by = None
 		
 		self.is_expired = None
 		self.expires_at = None
@@ -673,8 +679,29 @@ class EmergencyMessage(Message):
 				for attr_at in ('acknowledged_at', 'expires_at', 'called_back_at', 'last_delivered_at'):
 					if self._response[attr_at]:
 						setattr(self, attr_at, epoch_to_datetime(self._response[attr_at]))
+				
+				if self._response['acknowledged_by']:
+					if self._response['acknowledged_by'] == self.user.token:
+						self.acknowledged_by = self.user
+					
+					else:
+						self.acknowledged_by = self.user.app.get_user(self._response['acknowledged_by'])
 			
 			return not (self.is_acknowledged or self.is_expired)
 		
 		else:
 			return None
+	
+	def cancel(self):
+		"""
+		Cancels the request for acknowledgement of a sent message.
+		
+		"""
+		
+		self._response, self.last_polled_at = self.user.app._request('cancel', url='{endpoint}{path}{receipt}/cancel.json'.format(
+			endpoint=ENDPOINT,
+			path=REQUESTS['receipt']['path'],
+			receipt=self.receipt
+		))
+		
+		return bool(self._response['status'])
