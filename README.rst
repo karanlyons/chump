@@ -2,7 +2,7 @@
 Chump
 #####
 
-.. image:: https://badge.fury.io/py/chump@2x.png
+.. image:: https://badge.fury.io/py/chump.svg
 	:target: https://badge.fury.io/py/chump
 
 Chump is an Apache2 Licensed, fully featured API wrapper for
