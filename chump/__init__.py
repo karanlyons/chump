@@ -148,7 +148,7 @@ class APIError(Exception):
 		self.timestamp = timestamp #: A :py:class:`~datetime.datetime` of when this error was raised.
 		
 		self.id = self.response['request'] #: A :py:obj:`unicode` of the request's id.
-		self.status = self.response['status'] #: A :py:obj:`int` of the status code.
+		self.status = self.response['status'] #: An :py:obj:`int` of the status code.
 		self.errors = self.response['errors'] #: A :py:obj:`list` of human readable error messages as :py:obj:`unicode`\s.
 		
 		#: A :py:class:`dict` of the request's original arguments that the endpoint didn't like as :py:obj:`unicode`\s and why, also as :py:obj:`unicode`\s.
@@ -178,8 +178,8 @@ class Application(object):
 		self.sounds = None #: If authenticated, a :py:class:`dict` of available notification sounds, otherwise :py:obj:`None`.
 		self.token = unicode(token) #: A :py:obj:`unicode` of the application's API token.
 		
-		self.limit = None #: If a message has been sent, a :py:obj:`int` of the application's monthly message limit, otherwise :py:obj:`None`.
-		self.remaining = None #: If a message has been sent, a :py:obj:`int` of the application's remaining message allotment, otherwise :py:obj:`None`.
+		self.limit = None #: If a message has been sent, an :py:obj:`int` of the application's monthly message limit, otherwise :py:obj:`None`.
+		self.remaining = None #: If a message has been sent, an :py:obj:`int` of the application's remaining message allotment, otherwise :py:obj:`None`.
 		self.reset = None #: If a message has been sent, :py:class:`~datetime.datetime` of when the application's monthly message limit will reset, otherwise :py:obj:`None`.
 	
 	def __setattr__(self, name, value):
@@ -239,7 +239,7 @@ class Application(object):
 		:class:`~chump.Application` instance.
 		
 		:param unicode token: User API token.
-		:rtype: :class:`~chump.User`.
+		:rtype: A :class:`~chump.User`.
 		
 		"""
 		
@@ -250,7 +250,8 @@ class Application(object):
 		Handles the request/response cycle to Pushover's API endpoint. Request
 		types are defined in :attr:`.requests`.
 		
-		:param unicode request: 'message', 'validate', 'sound', or 'receipt'.
+		:param unicode request: The type of request to make. One of 'message',
+			'validate', 'sound', 'receipt', or 'cancel'.
 		:param dict data: (optional) Payload to send to endpoint.
 			Defaults to :py:obj:`None`.
 		:param unicode url: (optional) URL to send payload to. Defaults to the
@@ -260,7 +261,7 @@ class Application(object):
 			``response`` is a :py:obj:`dict` of the ``json`` response and
 			``timestamp`` is a :py:class:`~datetime.datetime` of the time the
 			response was returned.
-		:rtype: :py:obj:`tuple`.
+		:rtype: A :py:obj:`tuple`.
 		
 		:raises: :exc:`~chump.APIError` when the request or response
 			is invalid.
@@ -428,7 +429,7 @@ class User(object):
 			default sound.
 		
 		:returns: An unsent message.
-		:rtype: :class:`~chump.Message` or :class:`~chump.EmergencyMessage`.
+		:rtype: A :class:`~chump.Message` or :class:`~chump.EmergencyMessage`.
 		
 		"""
 		
@@ -453,7 +454,7 @@ class User(object):
 		with :attr:`.app`.
 		
 		:returns: A sent message.
-		:rtype: :class:`~chump.Message` or :class:`~chump.EmergencyMessage`.
+		:rtype: A :class:`~chump.Message` or :class:`~chump.EmergencyMessage`.
 		
 		"""
 		
@@ -597,6 +598,10 @@ class Message(object):
 		Sends the message. If called after the message has been sent,
 		resends it.
 		
+		:returns: A :py:obj:`bool` indicating if the message was
+			successfully sent.
+		:rtype: A :py:obj:`bool`.
+		
 		"""
 		
 		self.id = None
@@ -704,6 +709,10 @@ class EmergencyMessage(Message):
 		Sends the message. If called after the message has been sent,
 		resends it.
 		
+		:returns: A :py:obj:`bool` indicating if the message was
+			successfully sent.
+		:rtype: A :py:obj:`bool`.
+		
 		"""
 		
 		self.receipt = None
@@ -737,7 +746,7 @@ class EmergencyMessage(Message):
 		:returns: A :py:obj:`bool` indicating if the message has not expired,
 			called back nor been acknowledged, or :py:obj:`None` if the message
 			has no receipt with which to poll.
-		:rtype: :py:obj:`bool` or :py:obj:`None`.
+		:rtype: A :py:obj:`bool` or :py:obj:`None`.
 		
 		"""
 		
@@ -777,7 +786,7 @@ class EmergencyMessage(Message):
 		
 		:returns: A :py:obj:`bool` indicating if the message was
 			successfully cancelled.
-		:rtype: :py:obj:`bool`
+		:rtype: A :py:obj:`bool`.
 		
 		"""
 		
