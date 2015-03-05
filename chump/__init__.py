@@ -16,7 +16,7 @@ except ImportError:
 	import json
 
 
-VERSION = (1, 4, 0)
+VERSION = (1, 5, 0)
 
 __title__ = 'Chump'
 __version__ = '.'.join((unicode(i) for i in VERSION))

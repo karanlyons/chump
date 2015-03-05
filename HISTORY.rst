@@ -1,12 +1,24 @@
 History
 =======
 
+1.5.0 (03/05/2015)
+------------------
+
+ - Use unicode exclusively.
+ - Update length limits on message strings.
+ - Add support for HTML messages.
+ - Improve timezone support when pytz is unavailable.
+ - Remove requests dependency.
+ - Improve documentation.
+
+
 1.4.0 (05/31/2014)
 ------------------
 
  - Add new Pushover priority: LOWEST.
  - Add Application.{limit,remaining,reset} to track message allotment.
  - Fix title and message length validation.
+
 
 1.3.2 (05/16/2014)
 ------------------
