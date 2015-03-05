@@ -3,6 +3,7 @@
 from __future__ import division, absolute_import, print_function, unicode_literals
 
 import logging
+import re
 from calendar import timegm
 from datetime import datetime, timedelta
 from email.utils import parsedate_tz
@@ -99,6 +100,9 @@ HIGH = 1 #: Message priority: Sound, vibration, and banner regardless of user's 
 EMERGENCY = 2 #: Message priority: Sound, vibration, and banner regardless of user's quiet hours, and re-alerts until acknowledged.
 
 
+TOKEN_RE = re.compile(r'^[a-zA-Z0-9]{30}$') # Matches correct application/user tokens.
+
+
 ENDPOINT = 'https://api.pushover.net/1/'
 REQUESTS = {
 	'message': {
@@ -177,7 +181,11 @@ class Application(object):
 		super(Application, self).__setattr__(name, value)
 		
 		if name == 'token':
-			self._authenticate()
+			if not TOKEN_RE.match(value):
+				raise ValueError('Bad application token: expected unicode matching [a-zA-Z0-9]{30}, got {!r}'.format(value))
+			
+			else:
+				self._authenticate()
 	
 	def __unicode__(self):
 		return "Pushover App: {token}".format(token=self.token)
@@ -295,7 +303,11 @@ class User(object):
 		super(User, self).__setattr__(name, value)
 		
 		if name == 'token':
-			self._authenticate()
+			if not TOKEN_RE.match(value):
+				raise ValueError('Bad user token: expected unicode matching [a-zA-Z0-9]{30}, got {!r}'.format(value))
+			
+			else:
+				self._authenticate()
 	
 	def __unicode__(self):
 		return "Pushover User: {token}".format(token=self.token)
