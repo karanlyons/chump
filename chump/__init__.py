@@ -428,18 +428,17 @@ class Message(object):
 				except ValueError:
 					raise ValueError('Bad {name}: expected int, got {type}'.format(name=name, type=type(value)))
 			
-			if name in set(('message', 'title')):
-				length = len(value)
-				length += len(getattr(self, list(set(('message', 'title')) - set((name,)))[0], '')) # Yup.
-				
-				if length > 512:
-					raise ValueError('Bad {name}: message + title must be <= 512 characters, was {length}'.format(name=name, length=length))
+			if name == 'title' and len(value) > 250:
+				raise ValueError('Bad title: must be <= 250 characters, was {}'.format(len(value)))
 			
-			elif name == 'url' and len(value) > 500:
-				raise ValueError('Bad url: must be <= 500 characters, was {length}'.format(length=len(value)))
+			elif name == 'message' and len(value) > 1024:
+				raise ValueError('Bad message: must be <= 1024 characters, was {}'.format(len(value)))
 			
-			elif name == 'url_title' and len(value) > 50:
-				raise ValueError('Bad url_title: must be <= 50 characters, was {length}'.format(length=len(value)))
+			elif name == 'url' and len(value) > 512:
+				raise ValueError('Bad url: must be <= 512 characters, was {}'.format(len(value)))
+			
+			elif name == 'url_title' and len(value) > 100:
+				raise ValueError('Bad url_title: must be <= 100 characters, was {}'.format(len(value)))
 			
 			elif name == 'timestamp':
 				try:
