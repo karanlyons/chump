@@ -459,7 +459,9 @@ class User(object):
 		
 		else:
 			message_class = Message
-			map(kwargs.pop, ('callback', 'retry', 'expire'))
+			kwargs.pop('callback')
+			kwargs.pop('retry')
+			kwargs.pop('expire')
 		
 		return message_class(self, **kwargs)
 	
