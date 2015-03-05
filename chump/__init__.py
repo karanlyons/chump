@@ -577,13 +577,13 @@ class EmergencyMessage(Message):
 	
 	"""
 	
-	def __init__(self, user, message, title=None, timestamp=None, url=None,
-		         url_title=None, device=None, sound=None, callback=None,
-		         retry=30, expire=86400):
+	def __init__(self, user, message, html=False, title=None, timestamp=None,
+		         url=None, url_title=None, device=None, sound=None,
+		         callback=None, retry=30, expire=86400):
 		priority = EMERGENCY
 		
 		super(EmergencyMessage, self).__init__(
-			user, message, title, timestamp, url,
+			user, message, html, title, timestamp, url,
 			url_title, device, priority, sound
 		)
 		
