@@ -2,11 +2,10 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 
-import calendar
 import logging
-import time
-from datetime import datetime
-from email.utils import parsedate
+from calendar import timegm
+from datetime import datetime, timedelta
+from email.utils import parsedate_tz
 
 import requests
 
@@ -36,27 +35,61 @@ except AttributeError:
 
 
 try:
-	import pytz
-	
-	def utc_now(): return pytz.utc.localize(datetime.utcnow())
-	
-	def datetime_to_epoch(d):
-		try:
-			return int(calendar.timegm(d.astimezone(pytz.utc).timetuple()))
-		
-		except ValueError:
-			return int(time.mktime(d.timetuple()))
-	
-	def epoch_to_datetime(e): return pytz.utc.localize(datetime.utcfromtimestamp(e))
-	def http_date_to_datetime(t): return pytz.utc.localize(datetime(*parsedate(t)[:6]))
+	from pytz import utc
 
-except:
+except ImportError:
 	logger.warning('pytz is not installed; datetime\'s may be inaccurate.')
 	
-	def utc_now(): return datetime.utcnow()
-	def datetime_to_epoch(d): return int(time.mktime(d.timetuple()))
-	def epoch_to_datetime(e): return datetime.utcfromtimestamp(e)
-	def http_date_to_datetime(t): return datetime(*parsedate(t)[:6])
+	from datetime import tzinfo
+	
+	class UTC(tzinfo):
+		ZERO = timedelta(0)
+		
+		def utcoffset(self, dt):
+			return self.ZERO
+		
+		def tzname(self, dt):
+			return 'UTC'
+		
+		def dst(self, dt):
+			return self.ZERO
+		
+		def localize(self, dt):
+			return dt.replace(tzinfo=self)
+		
+		def __str__(self):
+			return 'UTC'
+		
+		def __repr__(self):
+			return '<UTC>'
+	
+	utc = UTC()
+
+
+def utc_now():
+	return utc.localize(datetime.utcnow())
+
+
+def datetime_to_epoch(dt):
+	if dt.tzinfo is None: # We got a naïve datetime. Assume it's UTC.
+		dt = utc.localize(dt)
+	
+	return timegm(dt.astimezone(utc).timetuple())
+
+
+def epoch_to_datetime(e):
+	return utc.localize(datetime.utcfromtimestamp(int(e)))
+
+
+def http_date_to_datetime(d):
+	d_tuple = parsedate_tz(d)
+	
+	dt = utc.localize(datetime(*d_tuple[:6]))
+	
+	if d_tuple[9]: # We've got a timezone offset.
+		dt += timedelta(seconds=d_tuple[9])
+	
+	return dt
 
 
 LOWEST = -2 #: Message priority: No sound, no vibration, no banner.
@@ -216,7 +249,7 @@ class Application(object):
 				if request == 'message':
 					self.limit = int(response.headers['X-Limit-App-Limit'])
 					self.remaining = int(response.headers['X-Limit-App-Remaining'])
-					self.reset = epoch_to_datetime(int(response.headers['X-Limit-App-Reset']))
+					self.reset = epoch_to_datetime(response.headers['X-Limit-App-Reset'])
 				
 				return json
 		
