@@ -103,19 +103,19 @@ ENDPOINT = 'https://api.pushover.net/1/'
 REQUESTS = {
 	'message': {
 		'method': 'post',
-		'url': 'messages.json',
+		'path': 'messages.json',
 	},
 	'validate': {
 		'method': 'post',
-		'url': 'users/validate.json',
+		'path': 'users/validate.json',
 	},
 	'sound': {
 		'method': 'get',
-		'url': 'sounds.json',
+		'path': 'sounds.json',
 	},
 	'receipt': {
 		'method': 'get',
-		'url': 'receipts/'
+		'path': 'receipts/'
 	},
 	'cancel': {
 		'method': 'post',
@@ -245,7 +245,7 @@ class Application(object):
 		data['token'] = self.token
 		
 		if url is None:
-			url = ENDPOINT + REQUESTS[request]['url']
+			url = ENDPOINT + REQUESTS[request]['path']
 		
 		logger.debug('Making request ({request}): {data}'.format(request=request, data=data))
 		
@@ -667,9 +667,9 @@ class EmergencyMessage(Message):
 		
 		if self.receipt:
 			if not (self.is_expired and self.is_acknowledged and self.is_called_back):
-				self._response, self.last_polled_at = self.user.app._request('receipt', url='{endpoint}{url}{receipt}.json'.format(
+				self._response, self.last_polled_at = self.user.app._request('receipt', url='{endpoint}{path}{receipt}.json'.format(
 					endpoint=ENDPOINT,
-					url=REQUESTS['receipt']['url'],
+					path=REQUESTS['receipt']['path'],
 					receipt=self.receipt
 				))
 				
