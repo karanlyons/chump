@@ -4,17 +4,22 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 import logging
 import re
+import urllib
 from calendar import timegm
 from datetime import datetime, timedelta
 from email.utils import parsedate_tz
 
-import requests
+try:
+	import ujson as json
+
+except ImportError:
+	import json
 
 
 VERSION = (1, 4, 0)
 
 __title__ = 'Chump'
-__version__ = '.'.join((str(i) for i in VERSION)) # str for compatibility with setup.py under Python 3.
+__version__ = '.'.join((unicode(i) for i in VERSION))
 __author__ = 'Karan Lyons'
 __contact__ = 'karan@karanlyons.com'
 __homepage__ = 'https://github.com/karanlyons/chump'
@@ -258,16 +263,27 @@ class Application(object):
 		
 		logger.debug('Making request ({request}): {data}'.format(request=request, data=data))
 		
-		response = getattr(requests, REQUESTS[request]['method'])(url, params=data)
+		method = REQUESTS[request]['method']
 		
-		logger.debug('Response ({status_code}):\n{headers}\n{_content}'.format(**vars(response)))
+		if method == 'get':
+			if data:
+				url += '?' + urllib.urlencode(data)
+			
+			response = urllib.urlopen(url)
 		
-		if response.status_code == 200 or 400 <= response.status_code < 500:
-			json = response.json()
+		elif method == 'post':
+			response = urllib.urlopen(url, urllib.urlencode(data) if data else None)
+		
+		response.content = response.read()
+		
+		logger.debug('Response ({code}):\n{headers}\n{content}'.format(**vars(response)))
+		
+		if response.code == 200 or 400 <= response.code < 500:
+			response_json = json.loads(response.content)
 			timestamp = http_date_to_datetime(response.headers['date'])
 			
-			if 400 <= response.status_code < 500:
-				raise APIError(url, data, json, timestamp)
+			if 400 <= response.code < 500:
+				raise APIError(url, data, response_json, timestamp)
 			
 			else:
 				if request == 'message':
@@ -275,13 +291,13 @@ class Application(object):
 					self.remaining = int(response.headers['X-Limit-App-Remaining'])
 					self.reset = epoch_to_datetime(response.headers['X-Limit-App-Reset'])
 				
-				return (json, timestamp)
+				return (response_json, timestamp)
 		
 		else:
 			raise APIError(url, data, {
 				'request': None,
 				'status': 0,
-				'errors': ['unknown error ({code})'.format(code=response.status_code)],
+				'errors': ['unknown error ({code}): {content}'.format(**vars(response))],
 			}, timestamp)
 
 
