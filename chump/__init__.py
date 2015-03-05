@@ -132,24 +132,24 @@ class APIError(Exception):
 	"""
 	Pushover errors eponysterically end up here.
 	
-	:param dict json: The json response from the endpoint.
+	:param dict json: The ``json`` response from the endpoint.
 	
 	"""
 	
 	def __init__(self, url, request, response, timestamp):
-		self.url = url #: A :py:obj:`str` of the URL of the original request.
+		self.url = url #: A :py:obj:`unicode` of the URL of the original request.
 		self.request = request #: A :py:obj:`dict` of the original request payload.
-		self.response = response #: A :py:obj:`dict` of the json response from the endpoint.
-		self.timestamp = timestamp #: A :py:class:`datetime.datetime` of when this error was raised.
+		self.response = response #: A :py:obj:`dict` of the ``json`` response from the endpoint.
+		self.timestamp = timestamp #: A :py:class:`~datetime.datetime` of when this error was raised.
 		
-		self.id = self.response['request'] #: A :py:obj:`str` of the request's id.
+		self.id = self.response['request'] #: A :py:obj:`unicode` of the request's id.
 		self.status = self.response['status'] #: A :py:obj:`int` of the status code.
-		self.errors = self.response['errors'] #: A :py:obj:`list` of human readable error messages as :py:obj:`str`s.
+		self.errors = self.response['errors'] #: A :py:obj:`list` of human readable error messages as :py:obj:`unicode`\s.
 		
-		#: A :py:class:`dict` of the request's original arguments that the endpoint didn't like as :py:obj:`str`s and why, also as :py:obj:`str`s.
+		#: A :py:class:`dict` of the request's original arguments that the endpoint didn't like as :py:obj:`unicode`\s and why, also as :py:obj:`unicode`\s.
 		self.bad_inputs = dict([(key, value) for key, value in self.response.iteritems() if key not in set(('errors', 'status', 'receipt', 'request'))])
 		
-		self.receipt = self.response.get('receipt', None) #: A :py:obj:`str` of the message's receipt if it was an emergency message, otherwise ``None``.
+		self.receipt = self.response.get('receipt', None) #: A :py:obj:`unicode` of the message's receipt if it was an emergency message, otherwise :py:obj:`None`.
 		
 		logger.debug('APIError raised. Endpoint response was {}'.format(self.response))
 	
@@ -164,18 +164,18 @@ class Application(object):
 	"""
 	The Pushover app in use.
 	
-	:param string token: The app's API token.
+	:param unicode token: The app's API token.
 	
 	"""
 	
 	def __init__(self, token):
-		self.is_authenticated = False #: A :py:obj:`bool` indicating whether the app has been authenticated.
-		self.sounds = None #: If authenticated, a :py:class:`dict` of available notification sounds, otherwise ``None``.
-		self.token = unicode(token) #: The app's API token.
+		self.is_authenticated = False #: A :py:obj:`bool` indicating whether the application has been authenticated.
+		self.sounds = None #: If authenticated, a :py:class:`dict` of available notification sounds, otherwise :py:obj:`None`.
+		self.token = unicode(token) #: A :py:obj:`unicode` of the application's API token.
 		
-		self.limit = None #: If a message has been sent, a :py:obj:`int` representing the application's monthly message limit, otherwise ``None``.
-		self.remaining = None #: If a message has been sent, a :py:obj:`int` representing the application's remaining message allotment, otherwise ``None``.
-		self.reset = None #: If a message has been sent, :py:class:`datetime.datetime` representing when the application's monthly message limit will reset, otherwise ``None``.
+		self.limit = None #: If a message has been sent, a :py:obj:`int` of the application's monthly message limit, otherwise :py:obj:`None`.
+		self.remaining = None #: If a message has been sent, a :py:obj:`int` of the application's remaining message allotment, otherwise :py:obj:`None`.
+		self.reset = None #: If a message has been sent, :py:class:`~datetime.datetime` of when the application's monthly message limit will reset, otherwise :py:obj:`None`.
 	
 	def __setattr__(self, name, value):
 		super(Application, self).__setattr__(name, value)
@@ -188,19 +188,22 @@ class Application(object):
 				self._authenticate()
 	
 	def __unicode__(self):
-		return "Pushover App: {token}".format(token=self.token)
+		return "Pushover Application: {token}".format(token=self.token)
 	
 	def __repr__(self):
 		return 'Application(token={token!r})'.format(token=self.token)
 	
 	def _authenticate(self):
 		"""
-		Authenticates the supplied app token.
+		Authenticates the supplied application token.
 		
 		"""
 		
 		self.is_authenticated = True
 		
+		# There's actually no nice way to do this in the API, so we instead try
+		# to validate a user with no key, and check to see if the returned
+		# error also includes an error about our token.
 		try:
 			self._request('validate')
 		
@@ -216,7 +219,7 @@ class Application(object):
 		Returns a :class:`~chump.User` attached to the
 		:class:`~chump.Application` instance.
 		
-		:param string token: User API token.
+		:param unicode token: User API token.
 		:rtype: :class:`~chump.User`.
 		
 		"""
@@ -228,19 +231,20 @@ class Application(object):
 		Handles the request/response cycle to Pushover's API endpoint. Request
 		types are defined in :attr:`.requests`.
 		
-		:param string request: 'message', 'validate', 'sound', or 'receipt'.
+		:param unicode request: 'message', 'validate', 'sound', or 'receipt'.
 		:param dict data: (optional) Payload to send to endpoint.
-			Defaults to ``None``.
-		:param string url: (optional) URL to send payload to. Defaults to the
+			Defaults to :py:obj:`None`.
+		:param unicode url: (optional) URL to send payload to. Defaults to the
 			URL specified by :param:request.
 		
 		:returns: An :py:obj:`tuple` of (``response``, ``timestamp``), where
-			``response`` is a :py:obj:`dict` representing the ``json`` response
-			and ``timestamp`` is a :py:class:`datetime.datetime` representing
-			the time the response was returned.
+			``response`` is a :py:obj:`dict` of the ``json`` response and
+			``timestamp`` is a :py:class:`~datetime.datetime` of the time the
+			response was returned.
 		:rtype: :py:obj:`tuple`.
 		
-		:raises: :exc:`~chump.APIError` when request or response is invalid.
+		:raises: :exc:`~chump.APIError` when the request or response
+			is invalid.
 		
 		"""
 		
@@ -284,20 +288,20 @@ class Application(object):
 class User(object):
 	"""
 	A Pushover user. The user is tied to a specific
-	:class:`~chump.Application` app, which can be changed later by
-	setting :attr:`.app`.
+	:class:`~chump.Application`, which can be changed later
+	by setting :attr:`.app`.
 	
-	:param app: The Pushover app to send messages with.
+	:param app: The Pushover application to send messages with.
 	:type app: :class:`~chump.Application`
-	:param string token: The user's API token.
+	:param unicode token: The user's API token.
 	
 	"""
 	
 	def __init__(self, app, token):
-		self.app = app #: The Pushover app to send messages with.
-		self.is_authenticated = None #: If :attr:`.app` has been authenticated, a :py:obj:`bool` indicating whether the user has been authenticated, otherwise ``None``.
-		self.devices = None #: If authenticated, a :py:class:`set` of the user's devices, otherwise None.
-		self.token = unicode(token) #: The user's API token.
+		self.app = app #: The Pushover application to send messages with.
+		self.is_authenticated = None #: If :attr:`.app` has been authenticated, a :py:obj:`bool` indicating whether the user has been authenticated, otherwise :py:obj:`None`.
+		self.devices = None #: If authenticated, a :py:class:`set` of the user's devices, otherwise :py:obj:`None`.
+		self.token = unicode(token) #: A :py:obj:`unicode` of the user's API token.
 	
 	def __setattr__(self, name, value):
 		super(User, self).__setattr__(name, value)
@@ -348,50 +352,52 @@ class User(object):
 		"""
 		Creates a message to the User with :attr:`.app`.
 		
-		:param string message: Body for the message.
-		:param string title: (optional) Title for the message. Defaults
-			to ``None``.
-		:param timestamp: (optional) Date and time to give the message. Defaults
-			to the time the message was created.
-		:type timestamp: :py:class:`datetime.datetime` or :py:obj:`int`
-		:param string url: (optional) url to include in the message. Defaults
-			to ``None``.
-		:param string device: (optional) device from
+		:param unicode message: Body for the message.
+		:param bool html: Whether the message should be formatted as HTML.
+			Defaults to :py:obj:`False`.
+		:param unicode title: (optional) Title for the message. Defaults
+			to :py:obj:`None`.
+		:param timestamp: (optional) Date and time to give the message.
+			Defaults to the time the message was created.
+		:type timestamp: :py:class:`~datetime.datetime` or :py:obj:`int`
+		:param unicode url: (optional) URL to include in the message. Defaults
+			to :py:obj:`None`.
+		:param unicode device: (optional) device from
 			:attr:`.devices` to send to. Defaults to all of the user's devices.
 		:param int priority: (optional) priority for the message. The
 			constants :const:`~chump.LOWEST`, :const:`~chump.LOW`,
 			:const:`~chump.NORMAL`, :const:`~chump.HIGH`, and
 			:const:`~chump.EMERGENCY` may be used for convenience. Defaults
 			to :const:`~chump.NORMAL`.
-		:param string callback: (optional) If priority is
-			:const:`~chump.EMERGENCY`, the url to ping when the message
-			is acknowledged. Defaults to ``None``.
+		:param unicode callback: (optional) If priority is
+			:const:`~chump.EMERGENCY`, the URL to ping when the message
+			is acknowledged. Defaults to :py:obj:`None`.
 		:param int retry: (optional) If priority is :const:`~chump.EMERGENCY`,
-			the number of seconds to wait between realerting the user. Must be
+			the number of seconds to wait between re-alerting the user. Must be
 			greater than 30. Defaults to 30.
 		:param int expire: (optional) If priority is
 			:const:`~chump.EMERGENCY`, the number of seconds to retry before
 			giving up on alerting the user. Must be less than 86400. Defaults
 			to 86400.
-		:param string sound: (optional) The sound from :attr:`.app.sounds`
+		:param unicode sound: (optional) The sound from :attr:`.app.sounds`
 			to play when the message is received. Defaults to the user's
 			default sound.
 		
 		:returns: An unsent message.
-		:rtype: :class:`~chump.Message` or :class:`EmergencyMessage`.
+		:rtype: :class:`~chump.Message` or :class:`~chump.EmergencyMessage`.
 		
 		"""
 		
 		kwargs = locals().copy()
 		kwargs.pop('self')
 		
-		if priority == 2:
+		if priority == EMERGENCY:
 			message_class = EmergencyMessage
 			kwargs.pop('priority')
 		
 		else:
 			message_class = Message
-			[kwargs.pop(key) for key in ('callback', 'retry', 'expire')]
+			map(kwargs.pop, ('callback', 'retry', 'expire'))
 		
 		return message_class(self, **kwargs)
 	
@@ -399,11 +405,11 @@ class User(object):
 		             url=None, url_title=None, device=None, priority=NORMAL,
 		             callback=None, retry=30, expire=86400, sound=None):
 		"""
-		Does the same as :meth:`.create_message`, but sends them all with
-		:attr:`.app` as well.
+		Does the same as :meth:`.create_message`, but then sends the message
+		with :attr:`.app`.
 		
 		:returns: A sent message.
-		:rtype: :class:`~chump.Message` or :class:`EmergencyMessage`.
+		:rtype: :class:`~chump.Message` or :class:`~chump.EmergencyMessage`.
 		
 		"""
 		
@@ -421,7 +427,7 @@ class User(object):
 class Message(object):
 	"""
 	A Pushover message. The message is tied to a specific
-	:class:`~chump.Application` app, and :class:`~chump.User` user. All
+	:class:`~chump.Application`, and :class:`~chump.User`. All
 	parameters are exposed as attributes on the message, for convenience.
 	
 	:param user: The user to send the message to.
@@ -444,12 +450,12 @@ class Message(object):
 		self.priority = priority
 		self.sound = sound
 		
-		self.id = None #: The id of the sent message.
+		self.id = None #: A :py:obj:`unicode` of the id of the message if sent, otherwise :py:obj:`None`.
 		
 		self.is_sent = False #: A :py:obj:`bool` indicating whether the message has been sent.
-		self.sent_at = None #: A :py:class:`datetime.datetime` of when the message was sent, otherwise ``None``.
+		self.sent_at = None #: A :py:class:`~datetime.datetime` of when the message was sent, otherwise :py:obj:`None`.
 		
-		self.error = None #: A :exc:`~chump.APIError` if there was an error sending the message, otherwise ``None.
+		self.error = None #: An :exc:`~chump.APIError` if there was an error sending the message, otherwise :py:obj:`None`.
 	
 	def __setattr__(self, name, value):
 		if name == 'message' and len(value) == 0:
@@ -465,7 +471,7 @@ class Message(object):
 			
 			else:
 				if value not in (0, 1):
-					raise ValueError('Bad html: expected bool, got {} whose not coercible to (0, 1)'.format(value_type))
+					raise ValueError('Bad html: expected bool, got {} that is not coercible to (0, 1)'.format(value_type))
 		
 		if value and name in set(('message', 'title', 'url', 'url_title', 'device', 'callback', 'sound', 'priority', 'retry', 'expire')):
 			if name in set(('message', 'title', 'url', 'url_title', 'device', 'callback', 'sound')):
@@ -579,7 +585,7 @@ class EmergencyMessage(Message):
 	:const:`~chump.EMERGENCY`).
 	
 	All arguments are the same as in :class:`~chump.Message`, with the
-	additions of ``call_back``, ``retry``, and ``timeout``, which
+	additions of ``callback``, ``retry``, and ``timeout``, which
 	are all, too, as defined in :meth:`User.create_message`.
 	
 	"""
@@ -599,19 +605,19 @@ class EmergencyMessage(Message):
 		self.expire = expire
 		
 		self.receipt = None #: The receipt returned by the endpoint, for polling.
-		self.last_polled_at = None #: A :py:class:`datetime.datetime` of when the message was last polled.
+		self.last_polled_at = None #: A :py:class:`~datetime.datetime` of when the message was last polled.
 		
-		self.last_delivered_at = None #: A :py:class:`datetime.datetime` of when the message was last delivered.
+		self.last_delivered_at = None #: A :py:class:`~datetime.datetime` of when the message was last delivered.
 		
 		self.is_acknowledged = None #: A :py:obj:`bool` indicating whether the message has been acknowledged.
-		self.acknowledged_at = None #: A :py:class:`datetime.datetime` of when the message was acknowledged, otherwise ``None``.
+		self.acknowledged_at = None #: A :py:class:`~datetime.datetime` of when the message was acknowledged, otherwise :py:obj:`None`.
 		self.acknowledged_by = None #: A :class:`~chump.User` of the first user to have acknowledged the notification, otherwise :py:obj:`None`.
 		
 		self.is_expired = None #: A :py:obj:`bool` indicating whether the message has expired.
-		self.expires_at = None #: A :py:class:`datetime.datetime` of when the message expires.
+		self.expires_at = None #: A :py:class:`~datetime.datetime` of when the message expires.
 		
 		self.is_called_back = None #: A :py:obj:`bool` indicating whether the message has been called back.
-		self.called_back_at = None #: A :py:class:`datetime.datetime` of when the message was called back, otherwise ``None``.
+		self.called_back_at = None #: A :py:class:`~datetime.datetime` of when the message was called back, otherwise :py:obj:`None`.
 	
 	def __setattr__(self, name, value):
 		if name in ('retry', 'expire'):
@@ -630,6 +636,12 @@ class EmergencyMessage(Message):
 		super(EmergencyMessage, self).__setattr__(name, value)
 	
 	def send(self):
+		"""
+		Sends the message. If called after the message has been sent,
+		resends it.
+		
+		"""
+		
 		self.receipt = None
 		
 		self.last_delivered_at = None
@@ -658,10 +670,10 @@ class EmergencyMessage(Message):
 		Polls for the results of the sent message. If the message has not been
 		sent, does so.
 		
-		:returns: A boolean indicating if the message has not expired, called
-			back nor been acknowledged, or ``None`` if the message has no
-			receipt with which to poll.
-		:rtype: :py:obj:`bool` or ``None``.
+		:returns: A :py:obj:`bool` indicating if the message has not expired,
+			called back nor been acknowledged, or :py:obj:`None` if the message
+			has no receipt with which to poll.
+		:rtype: :py:obj:`bool` or :py:obj:`None`.
 		
 		"""
 		
@@ -697,7 +709,11 @@ class EmergencyMessage(Message):
 	
 	def cancel(self):
 		"""
-		Cancels the request for acknowledgement of a sent message.
+		Cancels the request for acknowledgment of a sent message.
+		
+		:returns: A :py:obj:`bool` indicating if the message was
+			successfully cancelled.
+		:rtype: :py:obj:`bool`
 		
 		"""
 		

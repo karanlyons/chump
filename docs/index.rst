@@ -19,8 +19,8 @@ Chump is an Apache2 Licensed, fully featured API wrapper for
 	>>> user.is_authenticated, user.devices
 	(True, set([u'iPhone']))
 	>>> message = user.send_message("What's up, dog?")
-	>>> message.is_sent, message.id, str(message.sent_at)
-	(True, u'7LjjD6bK8hgqdK6aJzZUblOPPH9cVpjZ', '2005-10-05 07:50:40+00:00')
+	>>> message.is_sent, message.id, unicode(message.sent_at)
+	(True, u'7LjjD6bK8hgqdK6aJzZUblOPPH9cVpjZ', u'2005-10-05 07:50:40+00:00')
 
 
 Installation
@@ -51,11 +51,11 @@ for :meth:`~chump.User.create_message`:
 
 	>>> message = user.create_message("Happy birthday, chuck!")
 	>>> message.is_sent, message.id
-	None, None
+	(False, None)
 	>>> message.send()
 	True
-	>>> message.is_sent, message.id, str(message.sent_at)
-	(True, u'fZSrekCvxi2vnpVADWBNchAGrllDi4cZ', '1993-12-17 06:03:45+00:00')
+	>>> message.is_sent, message.id, unicode(message.sent_at)
+	(True, u'fZSrekCvxi2vnpVADWBNchAGrllDi4cZ', u'1993-12-17 06:03:45+00:00')
 
 
 Sending messages with additional parameters
@@ -73,8 +73,8 @@ optionally supplied as ``kwargs``:
 	... 	html=True,
 	... 	sound='intermission'
 	... )
-	>>> (str(message), message.sound)
-	('(No Crackers, Gromit!) <b>We've forgotten the crackers!</b>', 'intermission')
+	>>> (unicode(message), message.sound)
+	(u'(No Crackers, Gromit!) <b>We've forgotten the crackers!</b>', 'intermission')
 
 And Chump will raise the appropriate exceptions if your ``kwargs`` violate the
 API restrictions:
@@ -85,11 +85,11 @@ API restrictions:
 	... 	"Gromit, we have a problem!"
 	... 	sound='this is not a sound'
 	... )
-	ValueError: Bad sound: must be in [u'bugle', u'classical', u'pianobar',
+	ValueError: Bad sound: must be in (u'bugle', u'classical', u'pianobar',
 		u'echo', u'alien', u'siren', u'spacealarm', u'gamelan', u'bike',
 		u'falling', u'cashregister', u'updown', u'pushover', u'magic',
 		u'tugboat', u'none', u'incoming', u'intermission', u'cosmic',
-		u'persistent', u'mechanical', u'climb'], was 'this is not a sound'
+		u'persistent', u'mechanical', u'climb'), was 'this is not a sound'
 
 All parameters are exposed as attributes in the :class:`~chump.Message`,
 so you can change them later.
@@ -115,11 +115,12 @@ calling :meth:`~chump.EmergencyMessage.poll`:
 	(True, u'eChnqsE5nZyefIbTVMuS9cfDV77mMaN9', False)
 	>>> message.poll()
 	False
-	>>> str(message.acknowledged_at)
-	'1995-12-24 06:10:39+00:00'
+	>>> unicode(message.acknowledged_at)
+	u'1995-12-24 06:10:39+00:00'
 
 :meth:`~chump.EmergencyMessage.poll` returns ``True`` whilst the message
-has not been acknowledged, so you can use it as an argument in while loops.
+has not been acknowledged, so you can use it cleanly as a condition in
+while loops.
 
 
 Developer Interface
