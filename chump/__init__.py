@@ -151,24 +151,27 @@ class APIError(Exception):
 	"""
 	Pushover errors eponysterically end up here.
 	
-	:param dict json: The ``json`` response from the endpoint.
+	:param string url: The URL of the original request.
+	:param dict request: The original request payload.
+	:param dict response: The ``json`` response from the endpoint.
+	:param datetime timestamp: When this error was raised.
 	
 	"""
 	
 	def __init__(self, url, request, response, timestamp):
-		self.url = url #: A :py:obj:`unicode` of the URL of the original request.
+		self.url = url #: A :py:obj:`string` of the URL of the original request.
 		self.request = request #: A :py:obj:`dict` of the original request payload.
 		self.response = response #: A :py:obj:`dict` of the ``json`` response from the endpoint.
 		self.timestamp = timestamp #: A :py:class:`~datetime.datetime` of when this error was raised.
 		
-		self.id = self.response['request'] #: A :py:obj:`unicode` of the request's id.
+		self.id = self.response['request'] #: A :py:obj:`string` of the request's id.
 		self.status = self.response['status'] #: An :py:obj:`int` of the status code.
-		self.errors = self.response['errors'] #: A :py:obj:`list` of human readable error messages as :py:obj:`unicode`\s.
+		self.errors = self.response['errors'] #: A :py:obj:`list` of human readable error messages as :py:obj:`string`\s.
 		
-		#: A :py:class:`dict` of the request's original arguments that the endpoint didn't like as :py:obj:`unicode`\s and why, also as :py:obj:`unicode`\s.
+		#: A :py:class:`dict` of the request's original arguments that the endpoint didn't like as :py:obj:`string`\s and why, also as :py:obj:`string`\s.
 		self.bad_inputs = dict([(key, value) for key, value in self.response.items() if key not in set(('errors', 'status', 'receipt', 'request'))])
 		
-		self.receipt = self.response.get('receipt', None) #: A :py:obj:`unicode` of the message's receipt if it was an emergency message, otherwise :py:obj:`None`.
+		self.receipt = self.response.get('receipt', None) #: A :py:obj:`string` of the message's receipt if it was an emergency message, otherwise :py:obj:`None`.
 		
 		logger.debug('APIError raised. Endpoint response was {}'.format(self.response))
 	
@@ -183,16 +186,16 @@ class APIError(Exception):
 
 class Application(object):
 	"""
-	The Pushover app in use.
+	The Pushover application in use.
 	
-	:param unicode token: The app's API token.
+	:param string token: The application's API token.
 	
 	"""
 	
 	def __init__(self, token):
 		self.is_authenticated = False #: A :py:obj:`bool` indicating whether the application has been authenticated.
 		self.sounds = None #: If authenticated, a :py:class:`dict` of available notification sounds, otherwise :py:obj:`None`.
-		self.token = unicode(token) #: A :py:obj:`unicode` of the application's API token.
+		self.token = unicode(token) #: A :py:obj:`string` of the application's API token.
 		
 		self.limit = None #: If a message has been sent, an :py:obj:`int` of the application's monthly message limit, otherwise :py:obj:`None`.
 		self.remaining = None #: If a message has been sent, an :py:obj:`int` of the application's remaining message allotment, otherwise :py:obj:`None`.
@@ -203,7 +206,7 @@ class Application(object):
 		
 		if name == 'token':
 			if not TOKEN_RE.match(value):
-				raise ValueError('Bad application token: expected unicode matching [a-zA-Z0-9]{30}, got {!r}'.format(value))
+				raise ValueError('Bad application token: expected string matching [a-zA-Z0-9]{30}, got {!r}'.format(value))
 			
 			else:
 				self._authenticate()
@@ -252,7 +255,7 @@ class Application(object):
 		Returns a :class:`~chump.User` attached to the
 		:class:`~chump.Application` instance.
 		
-		:param unicode token: User API token.
+		:param string token: User API token.
 		:rtype: A :class:`~chump.User`.
 		
 		"""
@@ -264,11 +267,11 @@ class Application(object):
 		Handles the request/response cycle to Pushover's API endpoint. Request
 		types are defined in :attr:`.requests`.
 		
-		:param unicode request: The type of request to make. One of 'message',
+		:param string request: The type of request to make. One of 'message',
 			'validate', 'sound', 'receipt', or 'cancel'.
 		:param dict data: (optional) Payload to send to endpoint.
 			Defaults to :py:obj:`None`.
-		:param unicode url: (optional) URL to send payload to. Defaults to the
+		:param string url: (optional) URL to send payload to. Defaults to the
 			URL specified by :param:request.
 		
 		:returns: An :py:obj:`tuple` of (``response``, ``timestamp``), where
@@ -343,7 +346,7 @@ class User(object):
 	
 	:param app: The Pushover application to send messages with.
 	:type app: :class:`~chump.Application`
-	:param unicode token: The user's API token.
+	:param string token: The user's API token.
 	
 	"""
 	
@@ -351,14 +354,14 @@ class User(object):
 		self.app = app #: The Pushover application to send messages with.
 		self.is_authenticated = None #: If :attr:`.app` has been authenticated, a :py:obj:`bool` indicating whether the user has been authenticated, otherwise :py:obj:`None`.
 		self.devices = None #: If authenticated, a :py:class:`set` of the user's devices, otherwise :py:obj:`None`.
-		self.token = unicode(token) #: A :py:obj:`unicode` of the user's API token.
+		self.token = unicode(token) #: A :py:obj:`string` of the user's API token.
 	
 	def __setattr__(self, name, value):
 		super(User, self).__setattr__(name, value)
 		
 		if name == 'token':
 			if not TOKEN_RE.match(value):
-				raise ValueError('Bad user token: expected unicode matching [a-zA-Z0-9]{30}, got {!r}'.format(value))
+				raise ValueError('Bad user token: expected string matching [a-zA-Z0-9]{30}, got {!r}'.format(value))
 			
 			else:
 				self._authenticate()
@@ -414,24 +417,24 @@ class User(object):
 		"""
 		Creates a message to the User with :attr:`.app`.
 		
-		:param unicode message: Body for the message.
+		:param string message: Body for the message.
 		:param bool html: Whether the message should be formatted as HTML.
 			Defaults to :py:obj:`False`.
-		:param unicode title: (optional) Title for the message. Defaults
+		:param string title: (optional) Title for the message. Defaults
 			to :py:obj:`None`.
 		:param timestamp: (optional) Date and time to give the message.
 			Defaults to the time the message was created.
 		:type timestamp: :py:class:`~datetime.datetime` or :py:obj:`int`
-		:param unicode url: (optional) URL to include in the message. Defaults
+		:param string url: (optional) URL to include in the message. Defaults
 			to :py:obj:`None`.
-		:param unicode device: (optional) device from
+		:param string device: (optional) device from
 			:attr:`.devices` to send to. Defaults to all of the user's devices.
 		:param int priority: (optional) priority for the message. The
 			constants :const:`~chump.LOWEST`, :const:`~chump.LOW`,
 			:const:`~chump.NORMAL`, :const:`~chump.HIGH`, and
 			:const:`~chump.EMERGENCY` may be used for convenience. Defaults
 			to :const:`~chump.NORMAL`.
-		:param unicode callback: (optional) If priority is
+		:param string callback: (optional) If priority is
 			:const:`~chump.EMERGENCY`, the URL to ping when the message
 			is acknowledged. Defaults to :py:obj:`None`.
 		:param int retry: (optional) If priority is :const:`~chump.EMERGENCY`,
@@ -441,7 +444,7 @@ class User(object):
 			:const:`~chump.EMERGENCY`, the number of seconds to retry before
 			giving up on alerting the user. Must be less than 86400. Defaults
 			to 86400.
-		:param unicode sound: (optional) The sound from :attr:`.app.sounds`
+		:param string sound: (optional) The sound from :attr:`.app.sounds`
 			to play when the message is received. Defaults to the user's
 			default sound.
 		
@@ -514,7 +517,7 @@ class Message(object):
 		self.priority = priority
 		self.sound = sound
 		
-		self.id = None #: A :py:obj:`unicode` of the id of the message if sent, otherwise :py:obj:`None`.
+		self.id = None #: A :py:obj:`string` of the id of the message if sent, otherwise :py:obj:`None`.
 		
 		self.is_sent = False #: A :py:obj:`bool` indicating whether the message has been sent.
 		self.sent_at = None #: A :py:class:`~datetime.datetime` of when the message was sent, otherwise :py:obj:`None`.
@@ -562,7 +565,7 @@ class Message(object):
 					value = unicode(value)
 				
 				except ValueError:
-					raise ValueError('Bad {name}: expected unicode, got {type}'.format(name=name, type=type(value)))
+					raise ValueError('Bad {name}: expected string, got {type}'.format(name=name, type=type(value)))
 			
 			elif name in set(('priority', 'retry', 'expire')):
 				try:
