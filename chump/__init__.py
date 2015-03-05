@@ -687,7 +687,7 @@ class EmergencyMessage(Message):
 		self.retry = retry
 		self.expire = expire
 		
-		self.receipt = None #: The receipt returned by the endpoint, for polling.
+		self.receipt = None #: A :py:obj:`string` of the receipt returned by the endpoint, for polling.
 		self.last_polled_at = None #: A :py:class:`~datetime.datetime` of when the message was last polled.
 		
 		self.last_delivered_at = None #: A :py:class:`~datetime.datetime` of when the message was last delivered.
