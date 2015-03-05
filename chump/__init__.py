@@ -11,7 +11,7 @@ from email.utils import parsedate
 import requests
 
 
-VERSION = (1, 3, 2)
+VERSION = (1, 4, 0)
 
 __title__ = 'Chump'
 __version__ = '.'.join((str(i) for i in VERSION)) # str for compatibility with setup.py under Python 3.
@@ -59,7 +59,8 @@ except:
 	def http_date_to_datetime(t): return datetime(*parsedate(t)[:6])
 
 
-LOW = -1 #: Message priority: No sound, no vibration, no banner.
+LOWEST = -2 #: Message priority: No sound, no vibration, no banner.
+LOW = -1 #: Message priority: No sound, no vibration, banner.
 NORMAL = 0 #: Message priority: Sound, vibration, and banner if outside of user's quiet hours.
 HIGH = 1 #: Message priority: Sound, vibration, and banner regardless of user's quiet hours.
 EMERGENCY = 2 #: Message priority: Sound, vibration, and banner regardless of user's quiet hours, and re-alerts until acknowledged.
@@ -122,6 +123,10 @@ class Application(object):
 		self.is_authenticated = False #: A :py:obj:`bool` indicating whether the app has been authenticated.
 		self.sounds = None #: If authenticated, a :py:class:`dict` of available notification sounds, otherwise ``None``.
 		self.token = unicode(token) #: The app's API token.
+		
+		self.limit = None #: If a message has been sent, a :py:obj:`int` representing the application's monthly message limit, otherwise ``None``.
+		self.remaining = None #: If a message has been sent, a :py:obj:`int` representing the application's remaining message allotment, otherwise ``None``.
+		self.reset = None #: If a message has been sent, :py:class:`datetime.datetime` representing when the application's monthly message limit will reset, otherwise ``None``.
 	
 	def __setattr__(self, name, value):
 		super(Application, self).__setattr__(name, value)
@@ -198,7 +203,7 @@ class Application(object):
 		
 		response = getattr(requests, REQUESTS[request]['method'])(url, params=data)
 		
-		logger.debug('Response ({code}): {text}'.format(code=response.status_code, text=response.text))
+		logger.debug('Response ({code}):\n{headers}\n{text}'.format(code=response.status_code, headers=response.headers, text=response.text))
 		
 		if response.status_code == 200 or 400 <= response.status_code < 500:
 			json = response.json()
@@ -208,6 +213,11 @@ class Application(object):
 				raise APIError(json)
 			
 			else:
+				if request == 'message':
+					self.limit = int(response.headers['X-Limit-App-Limit'])
+					self.remaining = int(response.headers['X-Limit-App-Remaining'])
+					self.reset = epoch_to_datetime(int(response.headers['X-Limit-App-Reset']))
+				
 				return json
 		
 		else:
@@ -295,9 +305,10 @@ class User(object):
 		:param string device: (optional) device from
 			:attr:`.devices` to send to. Defaults to all of the user's devices.
 		:param int priority: (optional) priority for the message. The
-			constants :const:`~chump.LOW`, :const:`~chump.NORMAL`,
-			:const:`~chump.HIGH`, and :const:`~chump.EMERGENCY` may be used for
-			convenience. Defaults to :const:`~chump.NORMAL`.
+			constants :const:`~chump.LOWEST`, :const:`~chump.LOW`,
+			:const:`~chump.NORMAL`, :const:`~chump.HIGH`, and
+			:const:`~chump.EMERGENCY` may be used for convenience. Defaults
+			to :const:`~chump.NORMAL`.
 		:param string callback: (optional) If priority is
 			:const:`~chump.EMERGENCY`, the url to ping when the message
 			is acknowledged. Defaults to ``None``.
@@ -386,6 +397,9 @@ class Message(object):
 		self.error = None #: A :exc:`~chump.APIError` if there was an error sending the message, otherwise ``None.
 	
 	def __setattr__(self, name, value):
+		if name == 'message' and len(value) == 0:
+			raise ValueError('Bad message: must be > 0 characters, was 0')
+		
 		if value and name in set(('message', 'title', 'url', 'url_title', 'device', 'callback', 'sound', 'priority', 'retry', 'expire')):
 			if name in set(('message', 'title', 'url', 'url_title', 'device', 'callback', 'sound')):
 				try:
@@ -403,7 +417,7 @@ class Message(object):
 			
 			if name in set(('message', 'title')):
 				length = len(value)
-				length += len(list(set(('message', 'title')) - set((name,)))[0]) # Yup.
+				length += len(getattr(self, list(set(('message', 'title')) - set((name,)))[0], '')) # Yup.
 				
 				if length > 512:
 					raise ValueError('Bad {name}: message + title must be <= 512 characters, was {length}'.format(name=name, length=length))
@@ -427,8 +441,8 @@ class Message(object):
 			
 			elif name == 'priority':
 				try:
-					if not -1 <= int(value) <= 2:
-						raise ValueError('Bad priority: must be between -1 and 2, was {value}'.format(value=value))
+					if not -2 <= int(value) <= 2:
+						raise ValueError('Bad priority: must be between -2 and 2, was {value}'.format(value=value))
 				
 				except TypeError:
 					raise TypeError('Bad priority: expected int, got {type}.'.format(type=type(value)))

@@ -98,10 +98,10 @@ Sending an emergency message:
 
 Pushover's emergency messages have a few additions over standard messages. They
 require dismissal from the user, and if not dismissed they'll keep popping up
-every ``retry`` seconds until ``timeout`` seconds from when they were sent. When
-the user acknowledges the message, ``callback`` will be pinged by Pushover's
-servers, but you can also check in on the message's status by calling
-:meth:`~chump.EmergencyMessage.poll`:
+every ``retry`` seconds until ``timeout`` seconds from when they were sent.
+When the user acknowledges the message, ``callback`` will be pinged by
+Pushover's servers, but you can also check in on the message's status by
+calling :meth:`~chump.EmergencyMessage.poll`:
 
 .. code-block:: pycon
 
@@ -155,7 +155,7 @@ Constants
 ---------
 
 .. automodule:: chump
-	:members: LOW, NORMAL, HIGH, EMERGENCY
+	:members: LOWEST, LOW, NORMAL, HIGH, EMERGENCY
 
 
 .. include:: ../HISTORY.rst
