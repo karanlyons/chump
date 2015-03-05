@@ -288,7 +288,7 @@ class User(object):
 			self.is_authenticated = True
 			self.devices = set(response['devices'])
 	
-	def create_message(self, message, title=None, timestamp=None,
+	def create_message(self, message, html=False, title=None, timestamp=None,
 		               url=None, url_title=None, device=None, priority=NORMAL,
 		               callback=None, retry=30, expire=86400, sound=None):
 		"""
@@ -341,7 +341,7 @@ class User(object):
 		
 		return message_class(self, **kwargs)
 	
-	def send_message(self, message, title=None, timestamp=None,
+	def send_message(self, message, html=False, title=None, timestamp=None,
 		             url=None, url_title=None, device=None, priority=NORMAL,
 		             callback=None, retry=30, expire=86400, sound=None):
 		"""
@@ -354,7 +354,7 @@ class User(object):
 		"""
 		
 		message = self.create_message(
-			message, title, timestamp,
+			message, html, title, timestamp,
 			url, url_title, device, priority,
 			callback, retry, expire, sound
 		)
@@ -377,10 +377,11 @@ class Message(object):
 	
 	"""
 	
-	def __init__(self, user, message, title=None, timestamp=None,
+	def __init__(self, user, message, html=False, title=None, timestamp=None,
 	             url=None, url_title=None, device=None, priority=0, sound=None):
 		self.user = user
 		self.message = message
+		self.html = html
 		self.title = title
 		self.timestamp = timestamp
 		self.url = url
@@ -400,6 +401,18 @@ class Message(object):
 		if name == 'message' and len(value) == 0:
 			raise ValueError('Bad message: must be > 0 characters, was 0')
 		
+		if name == 'html':
+			try:
+				value_type = type(value)
+				value = int(value)
+			
+			except ValueError:
+				raise ValueError('Bad html: expected bool, got {type}'.format(type=type(value)))
+			
+			else:
+				if value not in (0, 1):
+					raise ValueError('Bad html: expected bool, got {type} whose not coercible to (0, 1)'.format(type=value_type))
+		
 		if value and name in set(('message', 'title', 'url', 'url_title', 'device', 'callback', 'sound', 'priority', 'retry', 'expire')):
 			if name in set(('message', 'title', 'url', 'url_title', 'device', 'callback', 'sound')):
 				try:
@@ -408,7 +421,7 @@ class Message(object):
 				except ValueError:
 					raise ValueError('Bad {name}: expected string, got {type}'.format(name=name, type=type(value)))
 			
-			if name in set(('priority', 'retry', 'expire')):
+			elif name in set(('priority', 'retry', 'expire')):
 				try:
 					value = int(value)
 				
@@ -473,7 +486,7 @@ class Message(object):
 			'user': self.user.token,
 		}
 		
-		for kwarg in ('message', 'title', 'timestamp', 'url', 'url_title', 'device', 'priority', 'sound', 'retry', 'expire', 'callback'):
+		for kwarg in ('message', 'html', 'title', 'timestamp', 'url', 'url_title', 'device', 'priority', 'sound', 'retry', 'expire', 'callback'):
 			if hasattr(self, kwarg) and getattr(self, kwarg):
 				data[kwarg] = getattr(self, kwarg)
 		

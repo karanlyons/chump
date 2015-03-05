@@ -69,11 +69,12 @@ optionally supplied as ``kwargs``:
 
 	>>> message = user.create_message(
 	... 	title="No Crackers, Gromit!",
-	... 	message="We've forgotten the crackers!",
+	... 	message="<b>We've forgotten the crackers!</b>",
+	... 	html=True,
 	... 	sound='intermission'
 	... )
 	>>> (str(message), message.sound)
-	('(No Crackers, Gromit!) We've forgotten the crackers!', 'intermission')
+	('(No Crackers, Gromit!) <b>We've forgotten the crackers!</b>', 'intermission')
 
 And Chump will raise the appropriate exceptions if your ``kwargs`` violate the
 API restrictions:
