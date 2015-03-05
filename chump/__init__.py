@@ -11,7 +11,7 @@ from email.utils import parsedate
 import requests
 
 
-VERSION = (1, 3, 2)
+VERSION = (1, 4, 0)
 
 __title__ = 'Chump'
 __version__ = '.'.join((str(i) for i in VERSION)) # str for compatibility with setup.py under Python 3.
@@ -60,7 +60,7 @@ except:
 
 
 LOWEST = -2 #: Message priority: No sound, no vibration, no banner.
-LOW = -1 #: Message priority: No sound, no vibration, and banner.
+LOW = -1 #: Message priority: No sound, no vibration, banner.
 NORMAL = 0 #: Message priority: Sound, vibration, and banner if outside of user's quiet hours.
 HIGH = 1 #: Message priority: Sound, vibration, and banner regardless of user's quiet hours.
 EMERGENCY = 2 #: Message priority: Sound, vibration, and banner regardless of user's quiet hours, and re-alerts until acknowledged.

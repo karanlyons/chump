@@ -1,6 +1,13 @@
 History
 =======
 
+1.4.0 (05/31/2014)
+------------------
+
+ - Add new Pushover priority: LOWEST.
+ - Add Application.{limit,remaining,reset} to track message allotment.
+ - Fix title and message length validation.
+
 1.3.2 (05/16/2014)
 ------------------
 
