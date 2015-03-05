@@ -198,6 +198,20 @@ class Application(object):
 	def __repr__(self):
 		return 'Application(token={token!r})'.format(token=self.token)
 	
+	def __eq__(self, other):
+		return isinstance(other, self.__class__) and self.token and self.token == other.token
+	
+	def __ne__(self, other):
+		return not self.__eq__(other)
+	
+	def __lt__(self, other): return NotImplemented
+	
+	def __le__(self, other): return NotImplemented
+	
+	def __gt__(self, other): return NotImplemented
+	
+	def __ge__(self, other): return NotImplemented
+	
 	def _authenticate(self):
 		"""
 		Authenticates the supplied application token.
@@ -334,6 +348,20 @@ class User(object):
 	
 	def __repr__(self):
 		return 'User(app={app!r}, token={token!r})'.format(**vars(self))
+	
+	def __eq__(self, other):
+		return isinstance(other, self.__class__) and self.token and self.token == other.token and self.app == other.app
+	
+	def __ne__(self, other):
+		return not self.__eq__(other)
+	
+	def __lt__(self, other): return NotImplemented
+	
+	def __le__(self, other): return NotImplemented
+	
+	def __gt__(self, other): return NotImplemented
+	
+	def __ge__(self, other): return NotImplemented
 	
 	def _authenticate(self):
 		"""
@@ -473,6 +501,27 @@ class Message(object):
 		
 		self.error = None #: An :exc:`~chump.APIError` if there was an error sending the message, otherwise :py:obj:`None`.
 	
+	def __unicode__(self):
+		if self.title:
+			return "({title}) {message}".format(**vars(self))
+		
+		else:
+			return self.message
+	
+	def __eq__(self, other):
+		return isinstance(other, self.__class__) and self.id and self.id == other.id
+	
+	def __ne__(self, other):
+		return not self.__eq__(other)
+	
+	def __lt__(self, other): return NotImplemented
+	
+	def __le__(self, other): return NotImplemented
+	
+	def __gt__(self, other): return NotImplemented
+	
+	def __ge__(self, other): return NotImplemented
+	
 	def __setattr__(self, name, value):
 		if name == 'message' and len(value) == 0:
 			raise ValueError('Bad message: must be > 0 characters, was 0')
@@ -586,13 +635,6 @@ class Message(object):
 			self.id = self._response['request']
 		
 		return self.is_sent
-	
-	def __unicode__(self):
-		if self.title:
-			return "({title}) {message}".format(**vars(self))
-		
-		else:
-			return self.message
 
 
 class EmergencyMessage(Message):
@@ -634,6 +676,12 @@ class EmergencyMessage(Message):
 		
 		self.is_called_back = None #: A :py:obj:`bool` indicating whether the message has been called back.
 		self.called_back_at = None #: A :py:class:`~datetime.datetime` of when the message was called back, otherwise :py:obj:`None`.
+	
+	def __eq__(self, other):
+		return isinstance(other, self.__class__) and self.receipt and self.receipt == other.receipt
+	
+	def __ne__(self, other):
+		return not self.__eq__(other)
 	
 	def __setattr__(self, name, value):
 		if name in ('retry', 'expire'):
