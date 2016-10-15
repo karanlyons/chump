@@ -169,7 +169,11 @@ class APIError(Exception):
 		self.errors = self.response['errors'] #: A :py:obj:`list` of human readable error messages as :py:obj:`string`\s.
 		
 		#: A :py:class:`dict` of the request's original arguments that the endpoint didn't like as :py:obj:`string`\s and why, also as :py:obj:`string`\s.
-		self.bad_inputs = dict([(key, value) for key, value in self.response.items() if key not in set(('errors', 'status', 'receipt', 'request'))])
+		self.bad_inputs = {
+			key: value
+			for key, value in self.response.items()
+			if key not in ('errors', 'status', 'receipt', 'request')
+		}
 		
 		self.receipt = self.response.get('receipt', None) #: A :py:obj:`string` of the message's receipt if it was an emergency message, otherwise :py:obj:`None`.
 		
