@@ -28,7 +28,7 @@ except ImportError: # Python 2
 	class HTTPError(Exception): pass
 
 
-VERSION = (1, 5, 1)
+VERSION = (1, 5, 2)
 
 __title__ = 'Chump'
 __version__ = '.'.join((unicode(i) for i in VERSION))

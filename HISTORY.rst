@@ -1,6 +1,14 @@
 History
 =======
 
+1.5.2 (10/15/2016)
+------------------
+
+ - Exception logging bugfixes.
+ - Dropped support for Python 2.6.
+ - General code formatting improvements.
+
+
 1.5.1 (03/05/2015)
 ------------------
 
