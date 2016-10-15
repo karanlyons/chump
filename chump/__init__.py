@@ -175,7 +175,8 @@ class APIError(Exception):
 			if key not in ('errors', 'status', 'receipt', 'request')
 		}
 		
-		self.receipt = self.response.get('receipt', None) #: A :py:obj:`string` of the message's receipt if it was an emergency message, otherwise :py:obj:`None`.
+		#: A :py:obj:`string` of the message's receipt if it was an emergency message, otherwise :py:obj:`None`.
+		self.receipt = self.response.get('receipt', None)
 		
 		logger.debug('APIError raised. Endpoint response was {response}'.format(response=self.response))
 	
@@ -185,7 +186,12 @@ class APIError(Exception):
 	__str__ = __unicode__
 	
 	def __repr__(self):
-		return "APIError(url={url!r}, request={request!r}, response={response!r}, timestamp={timestamp!r})".format(**vars(self))
+		return "APIError(url={url!r}, request={request!r}, response={response!r}, timestamp={timestamp!r})".format(
+			url=self.url,
+			request=self.request,
+			response=self.response,
+			timestamp=self.timestamp,
+		)
 
 
 class Application(object):
@@ -229,7 +235,8 @@ class Application(object):
 	def __ne__(self, other):
 		return not self.__eq__(other)
 	
-	def __lt__(self, other): return NotImplemented
+	def __lt__(self, other):
+		return NotImplemented
 	
 	__le__ = __gt__ = __ge__ = __lt__
 	
@@ -317,7 +324,11 @@ class Application(object):
 		
 		response.content = response.read().decode()
 		
-		logger.debug('Response ({code}):\n{headers}\n{content}'.format(**vars(response)))
+		logger.debug('Response ({code}):\n{headers}\n{content}'.format(
+			code=response.code,
+			headers=response.headers,
+			content=response.content,
+		))
 		
 		if response.code == 200 or 400 <= response.code < 500:
 			response_json = json.loads(response.content)
@@ -384,7 +395,8 @@ class User(object):
 	def __ne__(self, other):
 		return not self.__eq__(other)
 	
-	def __lt__(self, other): return NotImplemented
+	def __lt__(self, other):
+		return NotImplemented
 	
 	__le__ = __gt__ = __ge__ = __lt__
 	
@@ -487,7 +499,7 @@ class User(object):
 		message = self.create_message(
 			message, html, title, timestamp,
 			url, url_title, device, priority,
-			callback, retry, expire, sound
+			callback, retry, expire, sound,
 		)
 		
 		message.send()
@@ -543,7 +555,8 @@ class Message(object):
 	def __ne__(self, other):
 		return not self.__eq__(other)
 	
-	def __lt__(self, other): return NotImplemented
+	def __lt__(self, other):
+		return NotImplemented
 	
 	__le__ = __gt__ = __ge__ = __lt__
 	
@@ -610,10 +623,16 @@ class Message(object):
 					raise TypeError('Bad priority: expected int, got {value_type}.'.format(value_type=type(value)))
 			
 			elif name == 'sound' and value not in self.user.app.sounds:
-				raise ValueError('Bad sound: must be in ({sounds}), was {value!r}'.format(sounds=', '.join(repr(s) for s in sorted(self.user.app.sounds.keys())), value=value))
+				raise ValueError('Bad sound: must be in ({sounds}), was {value!r}'.format(
+					sounds=', '.join(repr(s) for s in sorted(self.user.app.sounds.keys())),
+					value=value,
+				))
 			
 			elif name == 'device' and value not in self.user.devices:
-				raise ValueError('Bad device: must be in ({devices}), was {value!r}'.format(devices=', '.join(repr(s) for s in sorted(self.user.devices)), value=value))
+				raise ValueError('Bad device: must be in ({devices}), was {value!r}'.format(
+					devices=', '.join(repr(s) for s in sorted(self.user.devices)),
+					value=value,
+				))
 		
 		super(Message, self).__setattr__(name, value)
 	
@@ -782,12 +801,12 @@ class EmergencyMessage(Message):
 				self._response, self.last_polled_at = self.user.app._request('receipt', url='{endpoint}{path}{receipt}.json'.format(
 					endpoint=ENDPOINT,
 					path=REQUESTS['receipt']['path'],
-					receipt=self.receipt
+					receipt=self.receipt,
 				))
 				
 				for attr in ('acknowledged', 'expired', 'called_back'):
-					
 					setattr(self, 'is_{attr}'.format(attr=attr), bool(self._response[attr]))
+				
 				for attr_at in ('acknowledged_at', 'expires_at', 'called_back_at', 'last_delivered_at'):
 					if self._response[attr_at]:
 						setattr(self, attr_at, epoch_to_datetime(self._response[attr_at]))
@@ -817,7 +836,7 @@ class EmergencyMessage(Message):
 		self._response, self.last_polled_at = self.user.app._request('cancel', url='{endpoint}{path}{receipt}/cancel.json'.format(
 			endpoint=ENDPOINT,
 			path=REQUESTS['receipt']['path'],
-			receipt=self.receipt
+			receipt=self.receipt,
 		))
 		
 		return bool(self._response['status'])
