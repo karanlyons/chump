@@ -173,7 +173,7 @@ class APIError(Exception):
 		
 		self.receipt = self.response.get('receipt', None) #: A :py:obj:`string` of the message's receipt if it was an emergency message, otherwise :py:obj:`None`.
 		
-		logger.debug('APIError raised. Endpoint response was {0}'.format(self.response))
+		logger.debug('APIError raised. Endpoint response was {response}'.format(response=self.response))
 	
 	def __unicode__(self):
 		return "({id}) {errors}".format(id=self.id, errors=", ".join(self.errors))
@@ -206,7 +206,7 @@ class Application(object):
 		
 		if name == 'token':
 			if not TOKEN_RE.match(value):
-				raise ValueError('Bad application token: expected string matching [a-zA-Z0-9]{30}, got {!r}'.format(value))
+				raise ValueError('Bad application token: expected string matching [a-zA-Z0-9]{{30}}, got {value!r}'.format(value=value))
 			
 			else:
 				self._authenticate()
@@ -334,7 +334,7 @@ class Application(object):
 			raise APIError(url, data, {
 				'request': None,
 				'status': 0,
-				'errors': ['unknown error ({code}): {content}'.format(**vars(response))],
+				'errors': ['unknown error ({code}): {content}'.format(code=response.code, content=response.content)],
 			}, timestamp)
 
 
@@ -361,7 +361,7 @@ class User(object):
 		
 		if name == 'token':
 			if not TOKEN_RE.match(value):
-				raise ValueError('Bad user token: expected string matching [a-zA-Z0-9]{30}, got {!r}'.format(value))
+				raise ValueError('Bad user token: expected string matching [a-zA-Z0-9]{{30}}, got {value!r}'.format(value=value))
 			
 			else:
 				self._authenticate()
@@ -372,7 +372,7 @@ class User(object):
 	__str__ = __unicode__
 	
 	def __repr__(self):
-		return 'User(app={app!r}, token={token!r})'.format(**vars(self))
+		return 'User(app={app!r}, token={token!r})'.format(app=self.app, token=self.token)
 	
 	def __eq__(self, other):
 		return isinstance(other, self.__class__) and self.token and self.token == other.token and self.app == other.app
@@ -526,7 +526,7 @@ class Message(object):
 	
 	def __unicode__(self):
 		if self.title:
-			return "({title}) {message}".format(**vars(self))
+			return "({title}) {message}".format(title=self.title, message=self.message)
 		
 		else:
 			return self.message
@@ -553,11 +553,11 @@ class Message(object):
 				value = int(value)
 			
 			except ValueError:
-				raise ValueError('Bad html: expected bool, got {0}'.format(value_type))
+				raise ValueError('Bad html: expected bool, got {value_type}'.format(value_type=value_type))
 			
 			else:
 				if value not in (0, 1):
-					raise ValueError('Bad html: expected bool, got {0} that is not coercible to (0, 1)'.format(value_type))
+					raise ValueError('Bad html: expected bool, got {value_type} that is not coercible to (0, 1)'.format(value_type=value_type))
 		
 		if value and name in set(('message', 'title', 'url', 'url_title', 'device', 'callback', 'sound', 'priority', 'retry', 'expire')):
 			if name in set(('message', 'title', 'url', 'url_title', 'device', 'callback', 'sound')):
@@ -575,16 +575,16 @@ class Message(object):
 					raise ValueError('Bad {name}: expected int, got {type}'.format(name=name, type=type(value)))
 			
 			if name == 'title' and len(value) > 250:
-				raise ValueError('Bad title: must be <= 250 characters, was {0}'.format(len(value)))
+				raise ValueError('Bad title: must be <= 250 characters, was {length}'.format(length=len(value)))
 			
 			elif name == 'message' and len(value) > 1024:
-				raise ValueError('Bad message: must be <= 1024 characters, was {0}'.format(len(value)))
+				raise ValueError('Bad message: must be <= 1024 characters, was {length}'.format(length=len(value)))
 			
 			elif name == 'url' and len(value) > 512:
-				raise ValueError('Bad url: must be <= 512 characters, was {0}'.format(len(value)))
+				raise ValueError('Bad url: must be <= 512 characters, was {length}'.format(length=len(value)))
 			
 			elif name == 'url_title' and len(value) > 100:
-				raise ValueError('Bad url_title: must be <= 100 characters, was {0}'.format(len(value)))
+				raise ValueError('Bad url_title: must be <= 100 characters, was {length}'.format(length=len(value)))
 			
 			elif name == 'timestamp':
 				try:
@@ -595,15 +595,15 @@ class Message(object):
 						value = epoch_to_datetime(value)
 				
 				except (TypeError, ValueError):
-					raise TypeError('Bad timestamp: expected valid int or datetime, got {0}.'.format(type(value)))
+					raise TypeError('Bad timestamp: expected valid int or datetime, got {value_type}.'.format(value_type=type(value)))
 			
 			elif name == 'priority':
 				try:
 					if not -2 <= int(value) <= 2:
-						raise ValueError('Bad priority: must be between -2 and 2, was {!r}'.format(value))
+						raise ValueError('Bad priority: must be between -2 and 2, was {value!r}'.format(value=value))
 				
 				except TypeError:
-					raise TypeError('Bad priority: expected int, got {0}.'.format(type(value)))
+					raise TypeError('Bad priority: expected int, got {value_type}.'.format(value_type=type(value)))
 			
 			elif name == 'sound' and value not in self.user.app.sounds:
 				raise ValueError('Bad sound: must be in ({sounds}), was {value!r}'.format(sounds=', '.join(repr(s) for s in sorted(self.user.app.sounds.keys())), value=value))
@@ -717,10 +717,10 @@ class EmergencyMessage(Message):
 				raise ValueError('Bad {name}: expected int, got {type}'.format(name=name, type=type(value)))
 		
 		if name == 'retry' and value < 30:
-			raise ValueError('Bad retry: must be >= 30, was {0}'.format(value))
+			raise ValueError('Bad retry: must be >= 30, was {value}'.format(value=value))
 		
 		elif name == 'expire' and not 0 < value <= 86400:
-			raise ValueError('Bad expire: must be <= 86400 and >= 0, was {0}'.format(value))
+			raise ValueError('Bad expire: must be <= 86400 and >= 0, was {value}'.format(value=value))
 		
 		super(EmergencyMessage, self).__setattr__(name, value)
 	
@@ -782,8 +782,8 @@ class EmergencyMessage(Message):
 				))
 				
 				for attr in ('acknowledged', 'expired', 'called_back'):
-					setattr(self, 'is_{0}'.format(attr), bool(self._response[attr]))
 					
+					setattr(self, 'is_{attr}'.format(attr=attr), bool(self._response[attr]))
 				for attr_at in ('acknowledged_at', 'expires_at', 'called_back_at', 'last_delivered_at'):
 					if self._response[attr_at]:
 						setattr(self, attr_at, epoch_to_datetime(self._response[attr_at]))
