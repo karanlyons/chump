@@ -205,7 +205,7 @@ class Application(object):
 	def __init__(self, token):
 		self.is_authenticated = False #: A :py:obj:`bool` indicating whether the application has been authenticated.
 		self.sounds = None #: If authenticated, a :py:class:`dict` of available notification sounds, otherwise :py:obj:`None`.
-		self.token = unicode(token) #: A :py:obj:`string` of the application's API token.
+		self.token = token #: A :py:obj:`string` of the application's API token.
 		
 		self.limit = None #: If a message has been sent, an :py:obj:`int` of the application's monthly message limit, otherwise :py:obj:`None`.
 		self.remaining = None #: If a message has been sent, an :py:obj:`int` of the application's remaining message allotment, otherwise :py:obj:`None`.
@@ -215,11 +215,15 @@ class Application(object):
 		super(Application, self).__setattr__(name, value)
 		
 		if name == 'token':
-			if not TOKEN_RE.match(value):
-				raise ValueError('Bad application token: expected string matching [a-zA-Z0-9]{{30}}, got {value!r}'.format(value=value))
+			try:
+				if not TOKEN_RE.match(value):
+					raise ValueError('Bad application token: expected string matching [a-zA-Z0-9]{{30}}, got {value!r}'.format(value=value))
+				
+				else:
+					self._authenticate()
 			
-			else:
-				self._authenticate()
+			except TypeError:
+				raise TypeError('Bad token: expected string, got {value_type}'.format(value_type=type(value)))
 	
 	def __unicode__(self):
 		return "Pushover Application: {token}".format(token=self.token)
@@ -369,17 +373,21 @@ class User(object):
 		self.app = app #: The Pushover application to send messages with.
 		self.is_authenticated = None #: If :attr:`.app` has been authenticated, a :py:obj:`bool` indicating whether the user has been authenticated, otherwise :py:obj:`None`.
 		self.devices = None #: If authenticated, a :py:class:`set` of the user's devices, otherwise :py:obj:`None`.
-		self.token = unicode(token) #: A :py:obj:`string` of the user's API token.
+		self.token = token #: A :py:obj:`string` of the user's API token.
 	
 	def __setattr__(self, name, value):
 		super(User, self).__setattr__(name, value)
 		
-		if name == 'token':
-			if not TOKEN_RE.match(value):
-				raise ValueError('Bad user token: expected string matching [a-zA-Z0-9]{{30}}, got {value!r}'.format(value=value))
-			
-			else:
-				self._authenticate()
+		try:
+			if name == 'token':
+				if not TOKEN_RE.match(value):
+					raise ValueError('Bad user token: expected string matching [a-zA-Z0-9]{{30}}, got {value!r}'.format(value=value))
+				
+				else:
+					self._authenticate()
+		
+		except TypeError:
+			raise TypeError('Bad token: expected string, got {value_type}'.format(value_type=type(value)))
 	
 	def __unicode__(self):
 		return "Pushover User: {token}".format(token=self.token)
@@ -561,49 +569,43 @@ class Message(object):
 	__le__ = __gt__ = __ge__ = __lt__
 	
 	def __setattr__(self, name, value):
-		if name == 'message' and len(value) == 0:
-			raise ValueError('Bad message: must be > 0 characters, was 0')
-		
 		if name == 'html':
 			try:
-				value_type = type(value)
 				value = int(value)
 			
 			except ValueError:
-				raise ValueError('Bad html: expected bool, got {value_type}'.format(value_type=value_type))
+				raise TypeError('Bad html: expected bool, got {value_type}'.format(value_type=type(value)))
 			
 			else:
 				if value not in (0, 1):
-					raise ValueError('Bad html: expected bool, got {value_type} that is not coercible to (0, 1)'.format(value_type=value_type))
+					raise TypeError('Bad html: expected bool, got {value_type} that is not coercible to (0, 1)'.format(value_type=type(value)))
 		
-		if value and name in set(('message', 'title', 'url', 'url_title', 'device', 'callback', 'sound', 'priority', 'retry', 'expire')):
-			if name in set(('message', 'title', 'url', 'url_title', 'device', 'callback', 'sound')):
-				try:
-					value = unicode(value)
+		elif name in ('message', 'title', 'url', 'url_title', 'device', 'callback', 'sound'):
+			if value is not None:
+				if not isinstance(value, basestring):
+					raise TypeError('Bad {name}: expected string, got {type}'.format(name=name, type=type(value)))
 				
-				except ValueError:
-					raise ValueError('Bad {name}: expected string, got {type}'.format(name=name, type=type(value)))
-			
-			elif name in set(('priority', 'retry', 'expire')):
-				try:
-					value = int(value)
+				elif name == 'message' and not (0 < len(value) <= 1024):
+					raise ValueError('Bad message: must be 0-1024 characters, was {length}'.format(length=len(value)))
 				
-				except ValueError:
-					raise ValueError('Bad {name}: expected int, got {type}'.format(name=name, type=type(value)))
+				if name == 'title' and len(value) > 250:
+					raise ValueError('Bad title: must be <= 250 characters, was {length}'.format(length=len(value)))
+				
+				elif name == 'url' and len(value) > 512:
+					raise ValueError('Bad url: must be <= 512 characters, was {length}'.format(length=len(value)))
+				
+				elif name == 'url_title' and len(value) > 100:
+					raise ValueError('Bad url_title: must be <= 100 characters, was {length}'.format(length=len(value)))
+		
+		elif name == 'priority':
+			try:
+				value = int(value)
 			
-			if name == 'title' and len(value) > 250:
-				raise ValueError('Bad title: must be <= 250 characters, was {length}'.format(length=len(value)))
-			
-			elif name == 'message' and len(value) > 1024:
-				raise ValueError('Bad message: must be <= 1024 characters, was {length}'.format(length=len(value)))
-			
-			elif name == 'url' and len(value) > 512:
-				raise ValueError('Bad url: must be <= 512 characters, was {length}'.format(length=len(value)))
-			
-			elif name == 'url_title' and len(value) > 100:
-				raise ValueError('Bad url_title: must be <= 100 characters, was {length}'.format(length=len(value)))
-			
-			elif name == 'timestamp':
+			except ValueError:
+				raise TypeError('Bad {name}: expected int, got {type}'.format(name=name, type=type(value)))
+		
+		elif name == 'timestamp':
+			if value is not None:
 				try:
 					if isinstance(value, datetime):
 						value = datetime_to_epoch(value)
@@ -613,26 +615,26 @@ class Message(object):
 				
 				except (TypeError, ValueError):
 					raise TypeError('Bad timestamp: expected valid int or datetime, got {value_type}.'.format(value_type=type(value)))
+		
+		elif name == 'priority':
+			try:
+				if not -2 <= int(value) <= 2:
+					raise ValueError('Bad priority: must be between -2 and 2, was {value!r}'.format(value=value))
 			
-			elif name == 'priority':
-				try:
-					if not -2 <= int(value) <= 2:
-						raise ValueError('Bad priority: must be between -2 and 2, was {value!r}'.format(value=value))
-				
-				except TypeError:
-					raise TypeError('Bad priority: expected int, got {value_type}.'.format(value_type=type(value)))
-			
-			elif name == 'sound' and value not in self.user.app.sounds:
-				raise ValueError('Bad sound: must be in ({sounds}), was {value!r}'.format(
-					sounds=', '.join(repr(s) for s in sorted(self.user.app.sounds.keys())),
-					value=value,
-				))
-			
-			elif name == 'device' and value not in self.user.devices:
-				raise ValueError('Bad device: must be in ({devices}), was {value!r}'.format(
-					devices=', '.join(repr(s) for s in sorted(self.user.devices)),
-					value=value,
-				))
+			except TypeError:
+				raise TypeError('Bad priority: expected int, got {value_type}.'.format(value_type=type(value)))
+		
+		elif name == 'sound' and value not in self.user.app.sounds:
+			raise ValueError('Bad sound: must be in ({sounds}), was {value!r}'.format(
+				sounds=', '.join(repr(s) for s in sorted(self.user.app.sounds.keys())),
+				value=value,
+			))
+		
+		elif name == 'device' and value not in self.user.devices:
+			raise ValueError('Bad device: must be in ({devices}), was {value!r}'.format(
+				devices=', '.join(repr(s) for s in sorted(self.user.devices)),
+				value=value,
+			))
 		
 		super(Message, self).__setattr__(name, value)
 	
@@ -737,13 +739,13 @@ class EmergencyMessage(Message):
 				value = int(value)
 			
 			except ValueError:
-				raise ValueError('Bad {name}: expected int, got {type}'.format(name=name, type=type(value)))
-		
-		if name == 'retry' and value < 30:
-			raise ValueError('Bad retry: must be >= 30, was {value}'.format(value=value))
-		
-		elif name == 'expire' and not 0 < value <= 86400:
-			raise ValueError('Bad expire: must be <= 86400 and >= 0, was {value}'.format(value=value))
+				raise TypeError('Bad {name}: expected int, got {type}'.format(name=name, type=type(value)))
+			
+			if name == 'retry' and value < 30:
+				raise ValueError('Bad retry: must be >= 30, was {value}'.format(value=value))
+			
+			elif name == 'expire' and not 0 < value <= 86400:
+				raise ValueError('Bad expire: must be 0-86400, was {value}'.format(value=value))
 		
 		super(EmergencyMessage, self).__setattr__(name, value)
 	
