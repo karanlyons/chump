@@ -24,7 +24,7 @@ except ImportError: # Python 3
 	unicode = basestring = str
 
 
-VERSION = (1, 5, 3, 'dev')
+VERSION = (1, 6, 0)
 
 __title__ = 'Chump'
 __version__ = '.'.join((unicode(i) for i in VERSION))
