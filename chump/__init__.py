@@ -35,19 +35,9 @@ __copyright__ = 'Copyright 2013 Karan Lyons'
 
 
 logger = logging.getLogger(__name__)
-
-try:
-	logger.addHandler(logging.NullHandler())
-
-except AttributeError:
-	class NullHandler(logging.Handler):
-		def emit(self, record):
-			pass
-	
-	logger.addHandler(NullHandler())
+logger.addHandler(logging.NullHandler())
 
 
-try:
 	from pytz import utc
 
 except ImportError:
