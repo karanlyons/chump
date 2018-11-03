@@ -4,6 +4,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 
 import logging
 import re
+import warnings
 from calendar import timegm
 from datetime import datetime, timedelta
 from email.utils import parsedate_tz
@@ -38,63 +39,48 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
+try: # pytz installed
 	from pytz import utc
+	def utc_now(): return utc.localize(datetime.utcnow())
+	def epoch_to_datetime(e): return utc.localize(datetime.utcfromtimestamp(int(e)))
 
 except ImportError:
-	logger.warning('pytz is not installed; datetime\'s may be inaccurate.')
+	try: # dateutil installed
+		from dateutil.tz import tzutc
+		utc = tzutc()
 	
-	from datetime import tzinfo
+	except ImportError:
+		try: # Python >= 3.2
+			from datetime import timezone
+			utc = timezone.utc
+		
+		except ImportError: # Python < 3.2
+			from datetime import tzinfo
+			class UTC(tzinfo):
+				ZERO = timedelta(0)
+				def utcoffset(self, dt): return self.ZERO
+				def tzname(self, dt): return 'UTC'
+				def dst(self, dt): return self.ZERO
+				def __unicode__(self): return 'UTC'
+				__str__ = __unicode__
+				def __repr__(self): return 'chump.UTC'
+			utc = UTC()
 	
-	class UTC(tzinfo):
-		ZERO = timedelta(0)
-		
-		def utcoffset(self, dt):
-			return self.ZERO
-		
-		def tzname(self, dt):
-			return 'UTC'
-		
-		def dst(self, dt):
-			return self.ZERO
-		
-		def localize(self, dt):
-			return dt.replace(tzinfo=self)
-		
-		def __unicode__(self):
-			return 'UTC'
-		
-		__str__ = __unicode__
-		
-		def __repr__(self):
-			return '<UTC>'
-	
-	utc = UTC()
-
-
-def utc_now():
-	return utc.localize(datetime.utcnow())
+	def utc_now(): return datetime.utcnow().replace(tzinfo=utc)
+	def epoch_to_datetime(e): return datetime.utcfromtimestamp(int(e)).replace(tzinfo=utc)
 
 
 def datetime_to_epoch(dt):
-	if dt.tzinfo is None: # We got a naïve datetime. Assume it's UTC.
-		dt = utc.localize(dt)
-	
-	return timegm(dt.astimezone(utc).timetuple())
-
-
-def epoch_to_datetime(e):
-	return utc.localize(datetime.utcfromtimestamp(int(e)))
+	if dt.tzinfo is not None: dt = dt.astimezone(utc)
+	else: warnings.warn('Naïve datetime: assuming UTC', RuntimeWarning)
+	return timegm(dt.timetuple())
 
 
 def http_date_to_datetime(d):
 	d_tuple = parsedate_tz(d)
 	
-	dt = utc.localize(datetime(*d_tuple[:6]))
-	
-	if d_tuple[9]: # We've got a timezone offset.
-		dt += timedelta(seconds=d_tuple[9])
-	
-	return dt
+	if d_tuple is not None:
+		return datetime(*d_tuple[:6]).replace(tzinfo=utc) - timedelta(seconds=d_tuple[9])
 
 
 LOWEST = -2 #: Message priority: No sound, no vibration, no banner.
@@ -592,10 +578,7 @@ class Message(object):
 		elif name == 'timestamp':
 			if value is not None:
 				try:
-					if isinstance(value, datetime):
-						value = datetime_to_epoch(value)
-					
-					else:
+					if not isinstance(value, datetime):
 						value = epoch_to_datetime(value)
 				
 				except (TypeError, ValueError):
@@ -645,9 +628,12 @@ class Message(object):
 			'user': self.user.token,
 		}
 		
-		for kwarg in ('message', 'html', 'title', 'timestamp', 'url', 'url_title', 'device', 'priority', 'sound', 'retry', 'expire', 'callback'):
-			if hasattr(self, kwarg) and getattr(self, kwarg):
+		for kwarg in ('message', 'html', 'title', 'url', 'url_title', 'device', 'priority', 'sound', 'retry', 'expire', 'callback'):
+			if getattr(self, kwarg, None):
 				data[kwarg] = getattr(self, kwarg)
+		
+		if self.timestamp:
+			data['timestamp'] = datetime_to_epoch(self.timestamp)
 		
 		try:
 			# We've got to store this somewhere so that EmergencyMessage can check it for a receipt.
