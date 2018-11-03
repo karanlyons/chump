@@ -24,7 +24,7 @@ except ImportError: # Python 3
 	unicode = basestring = str
 
 
-VERSION = (1, 5, 2)
+VERSION = (1, 5, 3, 'dev')
 
 __title__ = 'Chump'
 __version__ = '.'.join((unicode(i) for i in VERSION))
@@ -174,27 +174,53 @@ class Application(object):
 	"""
 	
 	def __init__(self, token):
-		self.is_authenticated = False #: A :py:obj:`bool` indicating whether the application has been authenticated.
-		self.sounds = None #: If authenticated, a :py:class:`dict` of available notification sounds, otherwise :py:obj:`None`.
+		self._is_authenticated = None #: A :py:obj:`bool` indicating whether the application has been authenticated.
+		self._sounds = None #: If authenticated, a :py:class:`dict` of available notification sounds, otherwise :py:obj:`None`.
 		self.token = token #: A :py:obj:`string` of the application's API token.
 		
 		self.limit = None #: If a message has been sent, an :py:obj:`int` of the application's monthly message limit, otherwise :py:obj:`None`.
 		self.remaining = None #: If a message has been sent, an :py:obj:`int` of the application's remaining message allotment, otherwise :py:obj:`None`.
 		self.reset = None #: If a message has been sent, :py:class:`~datetime.datetime` of when the application's monthly message limit will reset, otherwise :py:obj:`None`.
 	
-	def __setattr__(self, name, value):
-		super(Application, self).__setattr__(name, value)
+	@property
+	def is_authenticated(self):
+		if self._is_authenticated is None:
+			self._authenticate()
 		
+		return self._is_authenticated
+	
+	@is_authenticated.setter
+	def is_authenticated(self, value):
+		self._is_authenticated = value
+	
+	@property
+	def sounds(self):
+		if self._sounds is None and self._is_authenticated is not False:
+			self._authenticate()
+		
+		return self._sounds
+	
+	@sounds.setter
+	def sounds(self, value):
+		self._sounds = value
+	
+	def __setattr__(self, name, value):
 		if name == 'token':
 			try:
 				if not TOKEN_RE.match(value):
 					raise ValueError('Bad application token: expected string matching [a-zA-Z0-9]{{30}}, got {value!r}'.format(value=value))
 				
 				else:
-					self._authenticate()
+					old_token = getattr(self, 'token', None)
 			
 			except TypeError:
 				raise TypeError('Bad token: expected string, got {value_type}'.format(value_type=type(value)))
+			
+		super(Application, self).__setattr__(name, value)
+		
+		if name == 'token' and self.token != old_token:
+			super(Application, self).__setattr__('_is_authenticated', None)
+			super(Application, self).__setattr__('_sounds', None)
 	
 	def __unicode__(self):
 		return "Pushover Application: {token}".format(token=self.token)
@@ -217,24 +243,23 @@ class Application(object):
 	
 	def _authenticate(self):
 		"""
-		Authenticates the supplied application token.
+		Authenticates the supplied application token and populates available
+		notification sounds.
 		
 		"""
 		
-		self.is_authenticated = True
-		
-		# There's actually no nice way to do this in the API, so we instead try
-		# to validate a user with no key, and check to see if the returned
-		# error also includes an error about our token.
+		# We'll make a request for sounds (which we need to make regardless),
+		# and if that error fails with a token error we know we're
+		# unauthenticated.
 		try:
-			self._request('validate')
+			self._sounds = self._request('sound')[0]['sounds']
 		
 		except APIError as error:
 			if 'token' in error.bad_inputs:
-				self.is_authenticated = False
+				self._is_authenticated = False
 		
-		if self.is_authenticated and self.sounds is None:
-			self.sounds = self._request('sound')[0]['sounds']
+		else:
+			self._is_authenticated = True
 	
 	def get_user(self, token):
 		"""
@@ -342,23 +367,49 @@ class User(object):
 	
 	def __init__(self, app, token):
 		self.app = app #: The Pushover application to send messages with.
-		self.is_authenticated = None #: If :attr:`.app` has been authenticated, a :py:obj:`bool` indicating whether the user has been authenticated, otherwise :py:obj:`None`.
-		self.devices = None #: If authenticated, a :py:class:`set` of the user's devices, otherwise :py:obj:`None`.
+		self._is_authenticated = None #: If :attr:`.app` has been authenticated, a :py:obj:`bool` indicating whether the user has been authenticated, otherwise :py:obj:`None`.
+		self._devices = None #: If authenticated, a :py:class:`set` of the user's devices, otherwise :py:obj:`None`.
 		self.token = token #: A :py:obj:`string` of the user's API token.
 	
-	def __setattr__(self, name, value):
-		super(User, self).__setattr__(name, value)
+	@property
+	def is_authenticated(self):
+		if self._is_authenticated is None and self.app._is_authenticated is not False:
+			self._authenticate()
 		
+		return self.app._is_authenticated is True and self._is_authenticated
+	
+	@is_authenticated.setter
+	def is_authenticated(self, value):
+		self._is_authenticated = value
+	
+	@property
+	def devices(self):
+		if self._devices is None and self._is_authenticated is not False and self.app._is_authenticated is not False:
+			self._authenticate()
+		
+		return self._devices
+	
+	@devices.setter
+	def devices(self, value):
+		self._devices = value
+	
+	def __setattr__(self, name, value):
 		try:
 			if name == 'token':
 				if not TOKEN_RE.match(value):
 					raise ValueError('Bad user token: expected string matching [a-zA-Z0-9]{{30}}, got {value!r}'.format(value=value))
 				
 				else:
-					self._authenticate()
+					old_token = getattr(self, 'token', None)
 		
 		except TypeError:
 			raise TypeError('Bad token: expected string, got {value_type}'.format(value_type=type(value)))
+		
+		super(User, self).__setattr__(name, value)
+		
+		if name == 'token' and self.token != old_token:
+			super(User, self).__setattr__('_is_authenticated', None)
+			super(User, self).__setattr__('_devices', None)
 	
 	def __unicode__(self):
 		return "Pushover User: {token}".format(token=self.token)
@@ -390,21 +441,25 @@ class User(object):
 		
 		except APIError as error:
 			if 'token' in error.bad_inputs: # We can't authenticate users with a bad API token.
-				self.app.is_authenticated = False
-				self.is_authenticated = None
-				self.devices = None
-			
-			elif 'user' not in error.bad_inputs or error.bad_inputs['user'].startswith('valid'):
-				self.is_authenticated = True
-				self.devices = set()
+				self.app._is_authenticated = False
+				self.app._sounds = None
+				self._is_authenticated = None
+				self._devices = None
 			
 			else:
-				self.is_authenticated = False
-				self.devices = None
+				self.app._is_authenticated = True
+				
+				if 'user' not in error.bad_inputs or error.bad_inputs['user'].startswith('valid'):
+					self._is_authenticated = True
+					self._devices = set()
+				
+				else:
+					self._is_authenticated = False
+					self._devices = None
 		
 		else:
-			self.is_authenticated = True
-			self.devices = set(response['devices'])
+			self._is_authenticated = True
+			self._devices = set(response['devices'])
 	
 	def create_message(self, message, html=False, title=None, timestamp=None,
 		               url=None, url_title=None, device=None, priority=NORMAL,
@@ -567,6 +622,29 @@ class Message(object):
 				
 				elif name == 'url_title' and len(value) > 100:
 					raise ValueError('Bad url_title: must be <= 100 characters, was {length}'.format(length=len(value)))
+				
+				elif name == 'device':
+					if self.user.is_authenticated:
+						if value not in self.user.devices:
+							raise ValueError('Bad device: must be in ({devices}), was {value!r}'.format(
+								devices=', '.join(repr(s) for s in sorted(self.user.devices)),
+								value=value,
+							))
+					else:
+						logger.warning('Unverified device: {ancestor} is unauthorized, {value!r} may be bad'.format(
+							ancestor='application' if self.user.app._is_authenticated is False else 'user',
+							value=value
+						))
+				
+				elif name == 'sound':
+					if self.user.app.is_authenticated:
+						if value not in self.user.app.sounds:
+							raise ValueError('Bad sound: must be in ({sounds}), was {value!r}'.format(
+								sounds=', '.join(repr(s) for s in sorted(self.user.app.sounds.keys())),
+								value=value,
+							))
+					else:
+						logger.warning('Unverified sound: application is unauthorized, {value!r} may be bad'.format(value=value))
 		
 		elif name == 'priority':
 			try:
@@ -591,18 +669,6 @@ class Message(object):
 			
 			except TypeError:
 				raise TypeError('Bad priority: expected int, got {value_type}.'.format(value_type=type(value)))
-		
-		elif name == 'sound' and value not in self.user.app.sounds:
-			raise ValueError('Bad sound: must be in ({sounds}), was {value!r}'.format(
-				sounds=', '.join(repr(s) for s in sorted(self.user.app.sounds.keys())),
-				value=value,
-			))
-		
-		elif name == 'device' and value not in self.user.devices:
-			raise ValueError('Bad device: must be in ({devices}), was {value!r}'.format(
-				devices=', '.join(repr(s) for s in sorted(self.user.devices)),
-				value=value,
-			))
 		
 		super(Message, self).__setattr__(name, value)
 	
@@ -645,14 +711,19 @@ class Message(object):
 			
 			# This could be handled by calling {user,app}._authenticate, but that's two extra requests.
 			if 'token' in error.bad_inputs:
-				self.user.app.is_authenticated = False
-				self.user.is_authenticated = None
+				self.user.app._is_authenticated = False
+				self.user.app._sounds = None
+				self.user._is_authenticated = None
+				self.user._devices = None
 			
 			elif 'user' in error.bad_inputs:
-				self.user.is_authenticated = False
+				self.user._is_authenticated = False
+				self.user._devices = None
 		
 		else:
 			self.is_sent = True
+			self.user._is_authenticated = True
+			self.user.app._is_authenticated = True
 			self.id = self._response['request']
 		
 		return self.is_sent

@@ -1,6 +1,15 @@
 History
 =======
 
+1.6.0 (???)
+------------------
+
+ - Reduce requests required to instantiate applications and users.
+ - Lazy evaluation of app and user authentication.
+ - Lazy evaluation of Application.sounds and User.devices.
+ - Polyfill for basestring in Py3.
+
+
 1.5.2 (10/15/2016)
 ------------------
 
