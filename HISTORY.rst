@@ -7,7 +7,7 @@ History
  - Reduce requests required to instantiate applications and users.
  - Lazy evaluation of app and user authentication.
  - Lazy evaluation of Application.sounds and User.devices.
- - Polyfill for basestring in Py3.
+ - Improve compatibility with Python 2.7 through 3.7.
 
 
 1.5.2 (10/15/2016)
