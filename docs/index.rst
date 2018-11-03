@@ -6,7 +6,7 @@ Chump
 	:target: https://pypi.python.org/pypi/chump
 	:alt: PyPI Version
 
-Chump is an Apache2 Licensed, fully featured API wrapper for
+Chump is an MIT Licensed, fully featured API wrapper for
 `Pushover <https://pushover.net>`_:
 
 .. code-block:: pycon

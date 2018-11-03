@@ -10,7 +10,7 @@ Chump
 	:target: https://chump.readthedocs.org/en/latest/
 	:alt: Documentation Status
 
-Chump is an Apache2 Licensed, fully featured API wrapper for
+Chump is an MIT Licensed, fully featured API wrapper for
 `Pushover <https://pushover.net>`_:
 
 .. code-block:: pycon

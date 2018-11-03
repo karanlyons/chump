@@ -35,7 +35,7 @@ __version__ = '.'.join((unicode(i) for i in VERSION))
 __author__ = 'Karan Lyons'
 __contact__ = 'karan@karanlyons.com'
 __homepage__ = 'https://github.com/karanlyons/chump'
-__license__ = 'Apache 2.0'
+__license__ = 'MIT License'
 __copyright__ = 'Copyright 2013 Karan Lyons'
 
 
