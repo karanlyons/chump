@@ -11,21 +11,16 @@ from email.utils import parsedate_tz
 try: import ujson as json
 except ImportError: import json
 
-try: unicode # Python 2
-except NameError: unicode = str # Python 3
-else: # Python 2
-	def bytes(s, encoding=None, errors=None):
-		return s.encode(encoding, errors)
+try: # Python 2
+	from urllib import urlopen, urlencode
+	from urllib2 import HTTPError
+	def bytes(s, encoding=None, errors=None): return s.encode(encoding, errors)
 
-try: # Python 3
+except ImportError: # Python 3
 	from urllib.request import urlopen
 	from urllib.parse import urlencode
 	from urllib.error import HTTPError
-
-except ImportError: # Python 2
-	from urllib import urlopen, urlencode
-	
-	class HTTPError(Exception): pass
+	unicode = basestring = str
 
 
 VERSION = (1, 5, 2)
