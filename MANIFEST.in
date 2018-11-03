@@ -1,2 +1,8 @@
 include README.rst HISTORY.rst LICENSE
-recursive-include docs *
+graft docs
+prune docs/_build
+global-exclude __pycache__
+global-exclude *.py[co]
+global-exclude .DS_Store
+global-exclude .git
+global-exclude .gitignore
