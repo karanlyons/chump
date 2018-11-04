@@ -32,7 +32,8 @@ except ImportError: # Python 2
 			# Consume any remaining data in the socket
 			try:
 				while select((self.fp._sock,), (), (), 0)[0]:
-					self.fp._sock.recv(8192)
+					if not self.fp._sock.recv(256):
+						break
 			
 			except AttributeError:
 				pass
