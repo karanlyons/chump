@@ -73,7 +73,7 @@ except ImportError:
 
 def datetime_to_epoch(dt):
 	if dt.tzinfo is not None: dt = dt.astimezone(utc)
-	else: warnings.warn('Naïve datetime: assuming UTC', RuntimeWarning)
+	else: warnings.warn('Naïve datetime received: assuming UTC', RuntimeWarning)
 	return timegm(dt.timetuple())
 
 
