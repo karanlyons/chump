@@ -2,7 +2,7 @@ History
 =======
 
 1.6.0 (???)
-------------------
+-----------
 
  - Reduce requests required to instantiate applications and users.
  - Add connection pooling to improve network performance.

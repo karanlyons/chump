@@ -6,13 +6,11 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath('..'))
-sys.path.append(os.path.abspath('_themes/flask_sphinx_themes'))
-
 import chump
 
 
-project = "Chump"
-copyright = "2013, Karan Lyons"
+project = chump.__title__
+copyright = chump.__copyright__[10:]
 version = release = chump.__version__
 language = 'English'
 
@@ -24,12 +22,9 @@ extensions = [
 ]
 
 autodoc_member_order = 'bysource'
-intersphinx_mapping = {'python': ('http://docs.python.org/2.7', None)}
+intersphinx_mapping = {'python': ('http://docs.python.org/3', None)}
 
-templates_path = ['_templates']
-exclude_patterns = ['_build', '_themes']
-html_theme_path = ['_themes/flask_sphinx_themes']
-html_static_path = ['_static']
+exclude_patterns = ['_build']
 source_suffix = '.rst'
 master_doc = 'index'
 
@@ -37,9 +32,9 @@ add_function_parentheses = True
 add_module_names = True
 pygments_style = 'sphinx'
 
-htmlhelp_basename = 'chump_docs'
-html_title = "Chump {version} Documentation".format(version=version)
-html_short_title = "Chump"
+htmlhelp_basename = '{project}_docs'.format(project=project.lower())
+html_title = "{project} {version} Documentation".format(project=project, version=version)
+html_short_title = project
 html_last_updated_fmt = ''
 html_show_sphinx = False
 
@@ -47,8 +42,11 @@ if os.environ.get('READTHEDOCS', None) == 'True':
 	html_theme = 'default'
 
 else:
-	html_theme = 'flask'
+	_, user, repo = chump.__homepage__.rsplit('/', 2)
+	
 	html_theme_options = {
-		'index_logo': '',
-		'index_logo_height': '0px',
+		'github_user': user,
+		'github_repo': repo,
+		'description': 'The Best API Wrapper for Pushover.',
+		'sidebar_collapse': 'false'
 	}
