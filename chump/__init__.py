@@ -821,8 +821,7 @@ class EmergencyMessage(Message):
 		
 		if self.is_sent:
 			self.receipt = self._response['receipt']
-		
-		self.poll() # Poll immediately to fill attributes.
+			self.poll() # Poll immediately to fill attributes.
 		
 		return self.is_sent
 	

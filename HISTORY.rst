@@ -9,6 +9,7 @@ History
  - Lazy evaluation of app and user authentication.
  - Lazy evaluation of Application.sounds and User.devices.
  - Improve compatibility with Python 2.7 through 3.7.
+ - Bugfixes.
 
 
 1.5.2 (10/15/2016)
