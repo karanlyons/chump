@@ -92,6 +92,7 @@ EMERGENCY = 2 #: Message priority: Sound, vibration, and banner regardless of us
 
 
 TOKEN_RE = re.compile(r'^[a-zA-Z0-9]{30}$') # Matches correct application/user tokens.
+DEVICE_RE = re.compile(r'^[A-Za-z0-9_-]{,25}$') # Matches correct device names.
 
 
 ENDPOINT = 'https://api.pushover.net/1/'
@@ -221,7 +222,7 @@ class Application(object):
 		if name == 'token':
 			try:
 				if not TOKEN_RE.match(value):
-					raise ValueError('Bad application token: expected string matching [a-zA-Z0-9]{{30}}, got {value!r}'.format(value=value))
+					raise ValueError('Bad application token: expected string matching r{pattern!r}, got {value!r}'.format(pattern=TOKEN_RE.pattern, value=value))
 				
 				else:
 					old_token = getattr(self, 'token', None)
@@ -421,7 +422,7 @@ class User(object):
 		try:
 			if name == 'token':
 				if not TOKEN_RE.match(value):
-					raise ValueError('Bad user token: expected string matching [a-zA-Z0-9]{{30}}, got {value!r}'.format(value=value))
+					raise ValueError('Bad user token: expected string matching r{pattern!r}, got {value!r}'.format(pattern=TOKEN_RE.pattern, value=value))
 				
 				else:
 					old_token = getattr(self, 'token', None)
@@ -482,6 +483,7 @@ class User(object):
 					self._devices = None
 		
 		else:
+			self.app._is_authenticated = True
 			self._is_authenticated = True
 			self._devices = set(response['devices'])
 	
@@ -648,7 +650,10 @@ class Message(object):
 					raise ValueError('Bad url_title: must be <= 100 characters, was {length}'.format(length=len(value)))
 				
 				elif name == 'device':
-					if self.user.is_authenticated:
+					if not DEVICE_RE.match(value):
+						raise ValueError('Bad device: expected string matching r{pattern!r}, got {value!r}'.format(pattern=DEVICE_RE.pattern, value=value))
+					
+					elif self.user.is_authenticated:
 						if value not in self.user.devices:
 							raise ValueError('Bad device: must be in ({devices}), was {value!r}'.format(
 								devices=', '.join(repr(s) for s in sorted(self.user.devices)),
