@@ -3,15 +3,22 @@ Chump
 #####
 
 .. image:: https://img.shields.io/pypi/v/chump.svg
-	:target: https://pypi.python.org/pypi/chump
+	:target: https://pypi.org/project/chump
 	:alt: PyPI Version
 
-.. image:: https://img.shields.io/badge/docs-latest-blue.svg
-	:target: https://chump.readthedocs.org/en/latest/
-	:alt: Documentation Status
+.. image:: https://img.shields.io/pypi/l/chump.svg
+	:target: https://pypi.org/project/chump
+	:alt: License
 
-Chump is an Apache2 Licensed, fully featured API wrapper for
-`Pushover <https://pushover.net>`_:
+.. image:: https://img.shields.io/pypi/pyversions/chump.svg
+	:target: https://pypi.org/project/chump
+	:alt: Python Compatibility
+
+.. image:: https://img.shields.io/badge/docs-latest-blue.svg
+	:target: https://chump.readthedocs.io
+	:alt: Documentation
+
+Chump is a fully featured API wrapper for `Pushover <https://pushover.net>`_:
 
 .. code-block:: pycon
 
@@ -41,4 +48,4 @@ Documentation
 =============
 
 Full documentation is available at
-`ReadTheDocs <https://chump.readthedocs.org/en/latest/>`_.
+`ReadTheDocs <https://chump.readthedocs.io>`_.
