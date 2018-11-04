@@ -49,7 +49,7 @@ class FreeingHTTPSConnection(HTTPSConnection):
 
 class PushoverPooledConnectionHandler(HTTPSHandler):
 	def __init__(self, debuglevel=0, context=None):
-		# Old form for Py2 compatibility.
+		# Old form for Python 2 compatibility.
 		HTTPSHandler.__init__(self, debuglevel, context)
 		
 		self.lock = threading.Lock()
