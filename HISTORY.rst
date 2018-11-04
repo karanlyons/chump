@@ -5,6 +5,7 @@ History
 ------------------
 
  - Reduce requests required to instantiate applications and users.
+ - Add connection pooling to improve network performance.
  - Lazy evaluation of app and user authentication.
  - Lazy evaluation of Application.sounds and User.devices.
  - Improve compatibility with Python 2.7 through 3.7.

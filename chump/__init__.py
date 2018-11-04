@@ -12,16 +12,17 @@ from email.utils import parsedate_tz
 try: import ujson as json
 except ImportError: import json
 
-try: # Python 2
-	from urllib import urlopen, urlencode
+from .connection_pool import pool
+
+try: # Python 3
+	from urllib.error import HTTPError
+	from urllib.parse import urlencode
+	unicode = basestring = str
+
+except ImportError: # Python 2
+	from urllib import urlencode
 	from urllib2 import HTTPError
 	def bytes(s, encoding=None, errors=None): return s.encode(encoding, errors)
-
-except ImportError: # Python 3
-	from urllib.request import urlopen
-	from urllib.parse import urlencode
-	from urllib.error import HTTPError
-	unicode = basestring = str
 
 
 VERSION = (1, 6, 0)
@@ -313,14 +314,14 @@ class Application(object):
 				if data:
 					url += '?' + urlencode(data)
 				
-				response = urlopen(url)
+				response = pool.open(url)
 			
 			elif method == 'post':
-				response = urlopen(url, bytes(urlencode(data), 'utf-8', 'strict') if data else None)
+				response = pool.open(url, bytes(urlencode(data), 'utf-8', 'strict') if data else None)
 		
-		except HTTPError as e: # Python 3 on "error" status codes.
-			response = e
-			response.__dict__['headers'] = response.hdrs
+		except HTTPError as error_response:
+			response = error_response
+			response.__dict__['headers'] = error_response.hdrs
 		
 		response.content = response.read().decode()
 		
