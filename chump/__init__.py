@@ -175,9 +175,9 @@ class Application(object):
 	"""
 	
 	def __init__(self, token):
-		self._is_authenticated = None #: A :py:obj:`bool` indicating whether the application has been authenticated.
-		self._sounds = None #: If authenticated, a :py:class:`dict` of available notification sounds, otherwise :py:obj:`None`.
 		self.token = token #: A :py:obj:`string` of the application's API token.
+		self._is_authenticated = None
+		self._sounds = None
 		
 		self.limit = None #: If a message has been sent, an :py:obj:`int` of the application's monthly message limit, otherwise :py:obj:`None`.
 		self.remaining = None #: If a message has been sent, an :py:obj:`int` of the application's remaining message allotment, otherwise :py:obj:`None`.
@@ -185,6 +185,12 @@ class Application(object):
 	
 	@property
 	def is_authenticated(self):
+		"""
+		A lazily loaded :py:obj:`bool` indicating whether the application
+		is authenticated.
+		
+		"""
+		
 		if self._is_authenticated is None:
 			self._authenticate()
 		
@@ -196,6 +202,12 @@ class Application(object):
 	
 	@property
 	def sounds(self):
+		"""
+		A lazily loaded :py:class:`dict` of available notification sounds if
+		authenticated, otherwise :py:obj:`None`.
+		
+		"""
+		
 		if self._sounds is None and self._is_authenticated is not False:
 			self._authenticate()
 		
@@ -368,12 +380,17 @@ class User(object):
 	
 	def __init__(self, app, token):
 		self.app = app #: The Pushover application to send messages with.
-		self._is_authenticated = None #: If :attr:`.app` has been authenticated, a :py:obj:`bool` indicating whether the user has been authenticated, otherwise :py:obj:`None`.
-		self._devices = None #: If authenticated, a :py:class:`set` of the user's devices, otherwise :py:obj:`None`.
 		self.token = token #: A :py:obj:`string` of the user's API token.
+		self._is_authenticated = None
+		self._devices = None
 	
 	@property
 	def is_authenticated(self):
+		"""
+		A lazily loaded :py:obj:`bool` indicating whether the user is authenticated.
+		
+		"""
+		
 		if self._is_authenticated is None and self.app._is_authenticated is not False:
 			self._authenticate()
 		
@@ -385,6 +402,12 @@ class User(object):
 	
 	@property
 	def devices(self):
+		"""
+		A lazily loaded a :py:class:`set` of the user's devices if authenticated,
+		otherwise :py:obj:`None`.
+		
+		"""
+		
 		if self._devices is None and self._is_authenticated is not False and self.app._is_authenticated is not False:
 			self._authenticate()
 		

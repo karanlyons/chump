@@ -6,7 +6,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath('..'))
-sys.path.append(os.path.abspath('_themes'))
+sys.path.append(os.path.abspath('_themes/flask_sphinx_themes'))
 
 import chump
 
@@ -27,8 +27,8 @@ autodoc_member_order = 'bysource'
 intersphinx_mapping = {'python': ('http://docs.python.org/2.7', None)}
 
 templates_path = ['_templates']
-exclude_patterns = ['_build']
-html_theme_path = ['_themes']
+exclude_patterns = ['_build', '_themes']
+html_theme_path = ['_themes/flask_sphinx_themes']
 html_static_path = ['_static']
 source_suffix = '.rst'
 master_doc = 'index'
