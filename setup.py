@@ -28,6 +28,11 @@ setup(
 	include_package_data=True,
 	zip_safe=False,
 	python_requires='>=2.7',
+	project_urls={
+		'Source': chump.__homepage__,
+		'Documentation': 'https://chump.readthedocs.io',
+		'Tracker': chump.__homepage__ + '/issues',
+	},
 	classifiers=[
 		'Development Status :: 5 - Production/Stable',
 		'Intended Audience :: Developers',
