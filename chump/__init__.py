@@ -660,7 +660,7 @@ class Message(object):
 								value=value,
 							))
 					else:
-						logger.warning('Unverified device: {ancestor} is unauthorized, {value!r} may be bad'.format(
+						logger.warning('Unverified device: {ancestor} is unauthenticated, {value!r} may be bad'.format(
 							ancestor='application' if self.user.app._is_authenticated is False else 'user',
 							value=value
 						))
@@ -673,7 +673,7 @@ class Message(object):
 								value=value,
 							))
 					else:
-						logger.warning('Unverified sound: application is unauthorized, {value!r} may be bad'.format(value=value))
+						logger.warning('Unverified sound: application is unauthenticated, {value!r} may be bad'.format(value=value))
 		
 		elif name == 'priority':
 			try:
