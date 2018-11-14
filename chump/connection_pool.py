@@ -28,6 +28,11 @@ except ImportError: # Python 2
 	from urllib2 import build_opener, HTTPSHandler, URLError
 	
 	class FreeingHTTPResponse(HTTPResponse):
+		def __init__(self, sock, debuglevel=0, strict=0, method=None, buffering=False):
+			HTTPResponse.__init__(self, sock, debuglevel, strict, method, buffering)
+			
+			self._refcount = 0
+		
 		def close(self):
 			# Consume any remaining data in the socket
 			try:
@@ -42,6 +47,15 @@ except ImportError: # Python 2
 			
 			try: self._handler.free_connection(self._connection)
 			except AttributeError: pass
+		
+		def _reuse(self):
+			self._refcount += 1
+		
+		def _drop(self):
+			self._refcount -= 1
+			
+			if self._refcount <= 0:
+				self.close()
 
 
 class FreeingHTTPSConnection(HTTPSConnection):
